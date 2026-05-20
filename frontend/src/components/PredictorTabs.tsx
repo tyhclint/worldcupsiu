@@ -2,7 +2,6 @@
 
 import { usePredictorStore } from '@/src/store/predictorStore';
 import { PredictorTab } from '@/src/lib/types';
-import { CheckCircle } from 'lucide-react';
 import { cn } from '@/src/utils/merge';
 
 const TABS: { id: PredictorTab; label: string }[] = [
@@ -12,27 +11,26 @@ const TABS: { id: PredictorTab; label: string }[] = [
 ];
 
 export default function PredictorTabs() {
-  const { activeTab, setActiveTab, allGroupsComplete, canAdvanceToBracket } =
-    usePredictorStore();
+  const { activeTab, setActiveTab, allGroupsComplete, canAdvanceToBracket } = usePredictorStore();
 
-  const isTabEnabled = (tab: PredictorTab) => {
+  const isEnabled = (tab: PredictorTab) => {
     if (tab === 'groups') return true;
     if (tab === 'third') return allGroupsComplete();
     if (tab === 'bracket') return canAdvanceToBracket();
     return false;
   };
 
-  const isTabDone = (tab: PredictorTab) => {
+  const isDone = (tab: PredictorTab) => {
     if (tab === 'groups') return allGroupsComplete();
     if (tab === 'third') return canAdvanceToBracket();
     return false;
   };
 
   return (
-    <div className="flex gap-1 rounded-xl border border-gray-200 bg-white p-1">
+    <div className="flex border-b border-gray-200">
       {TABS.map(({ id, label }) => {
-        const enabled = isTabEnabled(id);
-        const done = isTabDone(id);
+        const enabled = isEnabled(id);
+        const done = isDone(id);
         const active = activeTab === id;
 
         return (
@@ -41,15 +39,15 @@ export default function PredictorTabs() {
             disabled={!enabled}
             onClick={() => enabled && setActiveTab(id)}
             className={cn(
-              'flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-all',
-              active && 'bg-gray-100 text-gray-900',
-              !active && enabled && 'text-gray-500 hover:text-gray-700',
-              !enabled && 'cursor-not-allowed opacity-40 text-gray-400'
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all duration-150',
+              active
+                ? 'text-gray-900 border-red-500'
+                : 'border-transparent',
+              enabled && !active && 'text-gray-500 hover:text-gray-700 hover:border-gray-300',
+              !enabled && 'text-gray-300 cursor-not-allowed'
             )}
           >
-            {done && (
-              <CheckCircle className="h-3.5 w-3.5 text-emerald-500" strokeWidth={2.5} />
-            )}
+            {done && !active && <span className="mr-1.5 text-teal-500">✓</span>}
             {label}
           </button>
         );
