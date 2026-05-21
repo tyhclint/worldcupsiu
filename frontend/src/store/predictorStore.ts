@@ -1,21 +1,32 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { buildPredictionPayload, isBracketComplete } from '@/src/lib/bracket';
+import { DOWNSTREAM_MATCH_IDS } from '@/src/lib/bracketConfig';
 import { GROUPS, getTeamById } from '@/src/lib/db';
-import { AllGroupPicks, PredictorTab, Team } from '@/src/lib/types';
+import {
+  AllGroupPicks,
+  CreatePredictionRequest,
+  KnockoutMatchId,
+  KnockoutPicks,
+  PredictorTab,
+  Team,
+} from '@/src/lib/types';
 
 interface PredictorState {
   picks: AllGroupPicks;
-  thirdPicks: string[]; // teamIds of selected third-place qualifiers
+  thirdPicks: string[];
+  knockoutPicks: KnockoutPicks;
   activeTab: PredictorTab;
 
   // Actions
   setRank: (groupId: string, teamId: string, rank: 1 | 2 | 3) => void;
   clearRank: (groupId: string, rank: 1 | 2 | 3) => void;
   toggleThirdPick: (teamId: string) => void;
+  setKnockoutWinner: (matchId: KnockoutMatchId, teamId: string) => void;
   setActiveTab: (tab: PredictorTab) => void;
   reset: () => void;
 
-  // Derived (computed inline — call these as functions)
+  // Derived values - call these as functions.
   isGroupComplete: (groupId: string) => boolean;
   allGroupsComplete: () => boolean;
   completedGroupCount: () => number;
@@ -23,6 +34,8 @@ interface PredictorState {
   getThirdPlaceTeams: () => (Team & { groupId: string })[];
   canAdvanceToThird: () => boolean;
   canAdvanceToBracket: () => boolean;
+  isBracketComplete: () => boolean;
+  buildPredictionPayload: () => CreatePredictionRequest | null;
 }
 
 export const usePredictorStore = create<PredictorState>()(
@@ -30,24 +43,25 @@ export const usePredictorStore = create<PredictorState>()(
     (set, get) => ({
       picks: {},
       thirdPicks: [],
+      knockoutPicks: {},
       activeTab: 'groups',
 
       setRank: (groupId, teamId, rank) => {
         set((state) => {
           const groupPicks = { ...(state.picks[groupId] ?? {}) };
 
-          // Clear this team from any existing rank
           for (const r of [1, 2, 3] as const) {
             if (groupPicks[r] === teamId) delete groupPicks[r];
           }
 
-          // Clear whoever was at this rank
           delete groupPicks[rank];
-
-          // Assign
           groupPicks[rank] = teamId;
 
-          return { picks: { ...state.picks, [groupId]: groupPicks } };
+          return {
+            picks: { ...state.picks, [groupId]: groupPicks },
+            thirdPicks: [],
+            knockoutPicks: {},
+          };
         });
       },
 
@@ -55,7 +69,12 @@ export const usePredictorStore = create<PredictorState>()(
         set((state) => {
           const groupPicks = { ...(state.picks[groupId] ?? {}) };
           delete groupPicks[rank];
-          return { picks: { ...state.picks, [groupId]: groupPicks } };
+
+          return {
+            picks: { ...state.picks, [groupId]: groupPicks },
+            thirdPicks: [],
+            knockoutPicks: {},
+          };
         });
       },
 
@@ -63,20 +82,41 @@ export const usePredictorStore = create<PredictorState>()(
         set((state) => {
           const existing = state.thirdPicks.includes(teamId);
           if (existing) {
-            return { thirdPicks: state.thirdPicks.filter((id) => id !== teamId) };
+            return {
+              thirdPicks: state.thirdPicks.filter((id) => id !== teamId),
+              knockoutPicks: {},
+            };
           }
-          if (state.thirdPicks.length >= 8) return state; // cap at 8
-          return { thirdPicks: [...state.thirdPicks, teamId] };
+          if (state.thirdPicks.length >= 8) return state;
+
+          return {
+            thirdPicks: [...state.thirdPicks, teamId],
+            knockoutPicks: {},
+          };
+        });
+      },
+
+      setKnockoutWinner: (matchId, teamId) => {
+        set((state) => {
+          const currentWinner = state.knockoutPicks[matchId];
+          if (currentWinner === teamId) return state;
+
+          const nextPicks = { ...state.knockoutPicks, [matchId]: teamId };
+          for (const downstreamMatchId of DOWNSTREAM_MATCH_IDS[matchId]) {
+            delete nextPicks[downstreamMatchId];
+          }
+
+          return { knockoutPicks: nextPicks };
         });
       },
 
       setActiveTab: (tab) => set({ activeTab: tab }),
 
-      reset: () => set({ picks: {}, thirdPicks: [], activeTab: 'groups' }),
+      reset: () => set({ picks: {}, thirdPicks: [], knockoutPicks: {}, activeTab: 'groups' }),
 
       isGroupComplete: (groupId) => {
         const gp = get().picks[groupId] ?? {};
-        return !!(gp[1] && gp[2] && gp[3]);
+        return Boolean(gp[1] && gp[2] && gp[3]);
       },
 
       allGroupsComplete: () => {
@@ -104,9 +144,16 @@ export const usePredictorStore = create<PredictorState>()(
 
       canAdvanceToThird: () => get().allGroupsComplete(),
       canAdvanceToBracket: () => get().thirdPicks.length === 8,
+      isBracketComplete: () => isBracketComplete(get().knockoutPicks),
+      buildPredictionPayload: () => buildPredictionPayload(
+        get().picks,
+        get().thirdPicks,
+        get().knockoutPicks,
+      ),
     }),
     {
-      name: 'wc2026-predictor', // persists to localStorage
-    }
-  )
+      name: 'wc2026-predictor',
+      skipHydration: true,
+    },
+  ),
 );

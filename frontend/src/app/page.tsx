@@ -1,17 +1,22 @@
 'use client';
 
-import { usePredictorStore } from '@/src/store/predictorStore';
-import PredictorTabs from '@/src/components/PredictorTabs';
+import { useEffect } from 'react';
+import BracketForm from '@/src/components/BracketForm';
 import GroupStageForm from '@/src/components/GroupStageForm';
+import PredictorTabs from '@/src/components/PredictorTabs';
+import ThirdPlaceForm from '@/src/components/ThirdPlaceForm';
+import { usePredictorStore } from '@/src/store/predictorStore';
 
 export default function PredictorPage() {
   const { activeTab, reset } = usePredictorStore();
 
+  useEffect(() => {
+    void usePredictorStore.persist.rehydrate();
+  }, []);
+
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-5">
-
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900">My Bracket</h1>
@@ -27,24 +32,11 @@ export default function PredictorPage() {
           </button>
         </div>
 
-        {/* Tabs */}
         <PredictorTabs />
 
-        {/* Panels */}
         {activeTab === 'groups' && <GroupStageForm />}
-
-        {activeTab === 'third' && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-400">
-            ThirdPlaceForm coming soon
-          </div>
-        )}
-
-        {activeTab === 'bracket' && (
-          <div className="rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-400">
-            BracketForm coming soon
-          </div>
-        )}
-
+        {activeTab === 'third' && <ThirdPlaceForm />}
+        {activeTab === 'bracket' && <BracketForm />}
       </div>
     </main>
   );

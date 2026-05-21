@@ -6,7 +6,7 @@ import { cn } from '@/src/utils/merge';
 
 const TABS: { id: PredictorTab; label: string }[] = [
   { id: 'groups', label: 'Groups' },
-  { id: 'third', label: '3rd Place' },
+  { id: 'third', label: 'Wildcards' },
   { id: 'bracket', label: 'Bracket' },
 ];
 
