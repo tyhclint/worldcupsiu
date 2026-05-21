@@ -1,0 +1,107 @@
+{
+  "knockouts": {
+    "M73": "south-korea",
+    "M74": "germany",
+    "M75": "tunisia",
+    "M76": "japan",
+    "M77": "iraq",
+    "M78": "norway",
+    "M79": "mexico",
+    "M80": "portugal",
+    "M81": "canada",
+    "M82": "south-africa",
+    "M83": "croatia",
+    "M84": "spain",
+    "M85": "qatar",
+    "M86": "saudi-arabia",
+    "M87": "panama",
+    "M88": "turkiye",
+    "M89": "germany",
+    "M90": "south-korea",
+    "M91": "japan",
+    "M92": "mexico",
+    "M93": "croatia",
+    "M94": "south-africa",
+    "M95": "saudi-arabia",
+    "M96": "qatar",
+    "M97": "south-korea",
+    "M98": "south-africa",
+    "M99": "mexico",
+    "M100": "saudi-arabia",
+    "M101": "south-africa",
+    "M102": "saudi-arabia",
+    "M104": "south-africa"
+  },
+  "wildcards": [
+    "south-africa",
+    "netherlands",
+    "canada",
+    "haiti",
+    "australia",
+    "cabo-verde",
+    "panama",
+    "portugal"
+  ],
+  "group_stage": {
+    "Group_A": {
+      "first": "mexico",
+      "third": "south-africa",
+      "second": "south-korea"
+    },
+    "Group_B": {
+      "first": "qatar",
+      "third": "canada",
+      "second": "switzerland"
+    },
+    "Group_C": {
+      "first": "brazil",
+      "third": "haiti",
+      "second": "morocco"
+    },
+    "Group_D": {
+      "first": "usa",
+      "third": "australia",
+      "second": "turkiye"
+    },
+    "Group_E": {
+      "first": "germany",
+      "third": "ecuador",
+      "second": "curacao"
+    },
+    "Group_F": {
+      "first": "tunisia",
+      "third": "netherlands",
+      "second": "japan"
+    },
+    "Group_G": {
+      "first": "belgium",
+      "third": "iran",
+      "second": "egypt"
+    },
+    "Group_H": {
+      "first": "spain",
+      "third": "cabo-verde",
+      "second": "saudi-arabia"
+    },
+    "Group_I": {
+      "first": "iraq",
+      "third": "france",
+      "second": "norway"
+    },
+    "Group_J": {
+      "first": "argentina",
+      "third": "austria",
+      "second": "algeria"
+    },
+    "Group_K": {
+      "first": "congo-dr",
+      "third": "portugal",
+      "second": "uzbekistan"
+    },
+    "Group_L": {
+      "first": "england",
+      "third": "panama",
+      "second": "croatia"
+    }
+  }
+}
