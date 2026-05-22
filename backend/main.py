@@ -6,7 +6,7 @@ from supabase import Client, create_client
 from dotenv import load_dotenv
 import os
 
-from routers.predictions import router as predictions_router
+from routers import api_router
 
 load_dotenv()
 
@@ -41,7 +41,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(predictions_router)
+app.include_router(api_router)
 
 
 @app.get("/")
