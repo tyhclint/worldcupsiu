@@ -57,39 +57,47 @@ export const ROUND_ORDER: RoundId[] = [
 ];
 
 export const KNOCKOUT_MATCHES: MatchConfig[] = [
-  { id: 'M73', round: 'round_of_32', label: 'Match 73', teamA: { type: 'group_rank', group: 'A', rank: 2 }, teamB: { type: 'group_rank', group: 'B', rank: 2 } },
+  // Round of 32 
   { id: 'M74', round: 'round_of_32', label: 'Match 74', teamA: { type: 'group_rank', group: 'E', rank: 1 }, teamB: { type: 'third_place', matchId: 'M74' } },
-  { id: 'M75', round: 'round_of_32', label: 'Match 75', teamA: { type: 'group_rank', group: 'F', rank: 1 }, teamB: { type: 'group_rank', group: 'C', rank: 2 } },
-  { id: 'M76', round: 'round_of_32', label: 'Match 76', teamA: { type: 'group_rank', group: 'C', rank: 1 }, teamB: { type: 'group_rank', group: 'F', rank: 2 } },
   { id: 'M77', round: 'round_of_32', label: 'Match 77', teamA: { type: 'group_rank', group: 'I', rank: 1 }, teamB: { type: 'third_place', matchId: 'M77' } },
+  { id: 'M73', round: 'round_of_32', label: 'Match 73', teamA: { type: 'group_rank', group: 'A', rank: 2 }, teamB: { type: 'group_rank', group: 'B', rank: 2 } },
+  { id: 'M75', round: 'round_of_32', label: 'Match 75', teamA: { type: 'group_rank', group: 'F', rank: 1 }, teamB: { type: 'group_rank', group: 'C', rank: 2 } },
+  { id: 'M83', round: 'round_of_32', label: 'Match 83', teamA: { type: 'group_rank', group: 'K', rank: 2 }, teamB: { type: 'group_rank', group: 'L', rank: 2 } },
+  { id: 'M84', round: 'round_of_32', label: 'Match 84', teamA: { type: 'group_rank', group: 'H', rank: 1 }, teamB: { type: 'group_rank', group: 'J', rank: 2 } },
+  { id: 'M81', round: 'round_of_32', label: 'Match 81', teamA: { type: 'group_rank', group: 'D', rank: 1 }, teamB: { type: 'third_place', matchId: 'M81' } },
+  { id: 'M82', round: 'round_of_32', label: 'Match 82', teamA: { type: 'group_rank', group: 'G', rank: 1 }, teamB: { type: 'third_place', matchId: 'M82' } },
+  { id: 'M76', round: 'round_of_32', label: 'Match 76', teamA: { type: 'group_rank', group: 'C', rank: 1 }, teamB: { type: 'group_rank', group: 'F', rank: 2 } },
   { id: 'M78', round: 'round_of_32', label: 'Match 78', teamA: { type: 'group_rank', group: 'E', rank: 2 }, teamB: { type: 'group_rank', group: 'I', rank: 2 } },
   { id: 'M79', round: 'round_of_32', label: 'Match 79', teamA: { type: 'group_rank', group: 'A', rank: 1 }, teamB: { type: 'third_place', matchId: 'M79' } },
   { id: 'M80', round: 'round_of_32', label: 'Match 80', teamA: { type: 'group_rank', group: 'L', rank: 1 }, teamB: { type: 'third_place', matchId: 'M80' } },
-  { id: 'M81', round: 'round_of_32', label: 'Match 81', teamA: { type: 'group_rank', group: 'D', rank: 1 }, teamB: { type: 'third_place', matchId: 'M81' } },
-  { id: 'M82', round: 'round_of_32', label: 'Match 82', teamA: { type: 'group_rank', group: 'G', rank: 1 }, teamB: { type: 'third_place', matchId: 'M82' } },
-  { id: 'M83', round: 'round_of_32', label: 'Match 83', teamA: { type: 'group_rank', group: 'K', rank: 2 }, teamB: { type: 'group_rank', group: 'L', rank: 2 } },
-  { id: 'M84', round: 'round_of_32', label: 'Match 84', teamA: { type: 'group_rank', group: 'H', rank: 1 }, teamB: { type: 'group_rank', group: 'J', rank: 2 } },
-  { id: 'M85', round: 'round_of_32', label: 'Match 85', teamA: { type: 'group_rank', group: 'B', rank: 1 }, teamB: { type: 'third_place', matchId: 'M85' } },
   { id: 'M86', round: 'round_of_32', label: 'Match 86', teamA: { type: 'group_rank', group: 'J', rank: 1 }, teamB: { type: 'group_rank', group: 'H', rank: 2 } },
-  { id: 'M87', round: 'round_of_32', label: 'Match 87', teamA: { type: 'group_rank', group: 'K', rank: 1 }, teamB: { type: 'third_place', matchId: 'M87' } },
   { id: 'M88', round: 'round_of_32', label: 'Match 88', teamA: { type: 'group_rank', group: 'D', rank: 2 }, teamB: { type: 'group_rank', group: 'G', rank: 2 } },
+  { id: 'M85', round: 'round_of_32', label: 'Match 85', teamA: { type: 'group_rank', group: 'B', rank: 1 }, teamB: { type: 'third_place', matchId: 'M85' } },
+  { id: 'M87', round: 'round_of_32', label: 'Match 87', teamA: { type: 'group_rank', group: 'K', rank: 1 }, teamB: { type: 'third_place', matchId: 'M87' } },
+
+  // Round of 16
   { id: 'M89', round: 'round_of_16', label: 'Match 89', teamA: { type: 'winner', matchId: 'M74' }, teamB: { type: 'winner', matchId: 'M77' } },
   { id: 'M90', round: 'round_of_16', label: 'Match 90', teamA: { type: 'winner', matchId: 'M73' }, teamB: { type: 'winner', matchId: 'M75' } },
-  { id: 'M91', round: 'round_of_16', label: 'Match 91', teamA: { type: 'winner', matchId: 'M76' }, teamB: { type: 'winner', matchId: 'M78' } },
-  { id: 'M92', round: 'round_of_16', label: 'Match 92', teamA: { type: 'winner', matchId: 'M79' }, teamB: { type: 'winner', matchId: 'M80' } },
   { id: 'M93', round: 'round_of_16', label: 'Match 93', teamA: { type: 'winner', matchId: 'M83' }, teamB: { type: 'winner', matchId: 'M84' } },
   { id: 'M94', round: 'round_of_16', label: 'Match 94', teamA: { type: 'winner', matchId: 'M81' }, teamB: { type: 'winner', matchId: 'M82' } },
+  { id: 'M91', round: 'round_of_16', label: 'Match 91', teamA: { type: 'winner', matchId: 'M76' }, teamB: { type: 'winner', matchId: 'M78' } },
+  { id: 'M92', round: 'round_of_16', label: 'Match 92', teamA: { type: 'winner', matchId: 'M79' }, teamB: { type: 'winner', matchId: 'M80' } },
   { id: 'M95', round: 'round_of_16', label: 'Match 95', teamA: { type: 'winner', matchId: 'M86' }, teamB: { type: 'winner', matchId: 'M88' } },
   { id: 'M96', round: 'round_of_16', label: 'Match 96', teamA: { type: 'winner', matchId: 'M85' }, teamB: { type: 'winner', matchId: 'M87' } },
+
+  // Quarter-finals
   { id: 'M97', round: 'quarter_finals', label: 'Match 97', teamA: { type: 'winner', matchId: 'M89' }, teamB: { type: 'winner', matchId: 'M90' } },
   { id: 'M98', round: 'quarter_finals', label: 'Match 98', teamA: { type: 'winner', matchId: 'M93' }, teamB: { type: 'winner', matchId: 'M94' } },
   { id: 'M99', round: 'quarter_finals', label: 'Match 99', teamA: { type: 'winner', matchId: 'M91' }, teamB: { type: 'winner', matchId: 'M92' } },
   { id: 'M100', round: 'quarter_finals', label: 'Match 100', teamA: { type: 'winner', matchId: 'M95' }, teamB: { type: 'winner', matchId: 'M96' } },
+
+  // Semi-finals
   { id: 'M101', round: 'semi_finals', label: 'Match 101', teamA: { type: 'winner', matchId: 'M97' }, teamB: { type: 'winner', matchId: 'M98' } },
   { id: 'M102', round: 'semi_finals', label: 'Match 102', teamA: { type: 'winner', matchId: 'M99' }, teamB: { type: 'winner', matchId: 'M100' } },
+
+  // Final
   { id: 'M104', round: 'final', label: 'Match 104', teamA: { type: 'winner', matchId: 'M101' }, teamB: { type: 'winner', matchId: 'M102' } },
 ];
-
 export const REQUIRED_KNOCKOUT_MATCH_IDS = KNOCKOUT_MATCHES.map((match) => match.id);
 
 export const DOWNSTREAM_MATCH_IDS: Record<KnockoutMatchId, KnockoutMatchId[]> = {
