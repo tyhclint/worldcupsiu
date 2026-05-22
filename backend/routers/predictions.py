@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from schema import CreatePredictionRequest
+from backend.schemas.knockout_format import CreatePredictionRequest
 
 
 router = APIRouter(
@@ -21,6 +21,7 @@ def score_prediction(payload: CreatePredictionRequest):
 
 @router.post("/store")
 def store_prediction(payload: CreatePredictionRequest, request: Request):
+    # @TODO: move supabase access to the /services folder for cleaner code @clint
     supabase = getattr(request.app.state, "supabase", None)
     if supabase is None:
         raise HTTPException(status_code=503, detail="Supabase client is not initialized")
