@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 
-from schema import CreatePredictionRequest
+from schemas.knockout_format import CreatePredictionRequest
+from services.predictions import insert_prediction
 
 
 router = APIRouter(
@@ -20,28 +21,13 @@ def score_prediction(payload: CreatePredictionRequest):
     }
 
 @router.post("/store")
-def store_prediction(payload: CreatePredictionRequest, request: Request):
-    supabase = getattr(request.app.state, "supabase", None)
-    if supabase is None:
-        raise HTTPException(status_code=503, detail="Supabase client is not initialized")
-
+def store_prediction(payload: CreatePredictionRequest):
     bracket_data = payload.bracket_data.model_dump(mode="json")
 
     try:
-        response = (
-            supabase
-            .table("user_predictions")
-            .insert({
-                "user_id": None,
-                "bracket_data": bracket_data,
-                "global_score": 0,
-            })
-            .execute()
-        )
+        stored_prediction = insert_prediction(bracket_data)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Failed to store prediction") from exc
-
-    stored_prediction = response.data[0] if response.data else None
 
     return {
         "valid": True,
