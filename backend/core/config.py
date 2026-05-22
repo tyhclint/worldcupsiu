@@ -1,8 +1,13 @@
 import os
+from pathlib import Path
+
+from dotenv import load_dotenv
 from supabase import create_client, Client
-#@TODO: @clint use this instead of creaing a client in main
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_ANON_KEY")
+SUPABASE_KEY = os.environ.get("SUPABASE_SECRET_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise ValueError("Supabase credentials are missing!")

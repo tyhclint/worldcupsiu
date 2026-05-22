@@ -1,16 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from services import auth_service  # Importing your new service
+from services import auth as auth_service
+from schemas.auth_format import AuthRequest
 
 router = APIRouter(
     prefix="/auth",
     tags=["auth"],
 )
-
-#@TODO: move this shit to a schema file
-class AuthRequest(BaseModel):
-    username: str
-    password: str
 
 @router.post("/signup")
 async def sign_up(req: AuthRequest):
