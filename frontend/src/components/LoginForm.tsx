@@ -30,6 +30,7 @@ export default function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
       localStorage.setItem('username', data.user);
+      window.dispatchEvent(new Event('auth-change'));
       
       onSuccess(data.user);
 
