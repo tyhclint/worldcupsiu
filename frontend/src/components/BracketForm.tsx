@@ -6,8 +6,8 @@ import { resolveMatchesByRound, type ResolvedTeam } from '@/src/lib/bracket';
 import { ROUND_LABELS, ROUND_ORDER } from '@/src/lib/bracketConfig';
 import { usePredictorStore } from '@/src/store/predictorStore';
 import { cn } from '@/src/utils/merge';
+import { submitBracketPayload } from '@/src/app/api/api';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 const MATCH_HEIGHT = 86;
 const BASE_GAP = 16;
 const CARD_WIDTH = 190;
@@ -126,6 +126,7 @@ export default function BracketForm() {
     isBracketComplete,
     buildPredictionPayload,
   } = usePredictorStore();
+  
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
 
@@ -154,18 +155,11 @@ export default function BracketForm() {
     setSubmitMessage('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/store`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Store request failed with ${response.status}`);
-      }
+      // Delegating the actual network request to our API layer
+      await submitBracketPayload(payload);
 
       setSubmitStatus('success');
-      setSubmitMessage('Bracket payload sent to /store.');
+      setSubmitMessage('Bracket payload successfully saved.');
     } catch (error) {
       setSubmitStatus('error');
       setSubmitMessage(error instanceof Error ? error.message : 'Unable to submit bracket.');
@@ -189,7 +183,7 @@ export default function BracketForm() {
           )}
         >
           <Send className="h-4 w-4" />
-          Submit bracket
+          {submitStatus === 'submitting' ? 'Submitting...' : 'Submit bracket'}
         </button>
       </div>
 
@@ -287,7 +281,7 @@ export default function BracketForm() {
 
       {submitMessage && (
         <p className={cn(
-          'text-sm',
+          'text-sm font-medium',
           submitStatus === 'success' ? 'text-teal-600' : 'text-red-600',
         )}
         >
