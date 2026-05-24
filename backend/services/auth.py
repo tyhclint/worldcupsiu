@@ -1,4 +1,5 @@
 from core.config import supabase
+from fastapi import HTTPException
 
 #dummy domain to use supabase email auth
 DUMMY_DOMAIN = "@yourapp.local"
@@ -27,3 +28,18 @@ def authenticate_user(username: str, password: str):
         "password": password,
     })
     return response
+
+def get_access_token(authorization: str) -> str:
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token:
+        raise HTTPException(status_code=401, detail="Missing auth token")
+
+    try:
+        user_response = supabase.auth.get_user(token)
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Invalid auth token") from exc
+
+    if not user_response.user:
+        raise HTTPException(status_code=401, detail="Invalid auth token")
+
+    return token

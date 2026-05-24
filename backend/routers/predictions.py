@@ -3,28 +3,12 @@ from fastapi import APIRouter, Header, HTTPException
 from core.config import supabase
 from schemas.knockout_format import CreatePredictionRequest
 from services.predictions import insert_prediction
+from services.auth import get_access_token
 
 
 router = APIRouter(
     tags=["predictions"],
 )
-
-
-def get_access_token(authorization: str) -> str:
-    scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=401, detail="Missing auth token")
-
-    try:
-        user_response = supabase.auth.get_user(token)
-    except Exception as exc:
-        raise HTTPException(status_code=401, detail="Invalid auth token") from exc
-
-    if not user_response.user:
-        raise HTTPException(status_code=401, detail="Invalid auth token")
-
-    return token
-
 
 @router.post("/score")
 def score_prediction(payload: CreatePredictionRequest):
