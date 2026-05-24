@@ -6,7 +6,7 @@ import { resolveMatchesByRound, type ResolvedTeam } from '@/src/lib/bracket';
 import { ROUND_LABELS, ROUND_ORDER } from '@/src/lib/bracketConfig';
 import { usePredictorStore } from '@/src/store/predictorStore';
 import { cn } from '@/src/utils/merge';
-import { submitBracketPayload } from '@/src/app/api/api';
+import { submitBracketPayload, updateBracketPayload } from '@/src/app/api/api';
 
 const MATCH_HEIGHT = 86;
 const BASE_GAP = 16;
@@ -125,6 +125,8 @@ export default function BracketForm() {
     setKnockoutWinner,
     isBracketComplete,
     buildPredictionPayload,
+    hasSavedBracket,
+    markBracketSaved,
   } = usePredictorStore();
   
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -155,11 +157,15 @@ export default function BracketForm() {
     setSubmitMessage('');
 
     try {
-      // Delegating the actual network request to our API layer
-      await submitBracketPayload(payload);
+      if (hasSavedBracket) {
+        await updateBracketPayload(payload);
+      } else {
+        await submitBracketPayload(payload);
+        markBracketSaved();
+      }
 
       setSubmitStatus('success');
-      setSubmitMessage('Bracket payload successfully saved.');
+      setSubmitMessage(hasSavedBracket ? 'Bracket successfully updated.' : 'Bracket payload successfully saved.');
     } catch (error) {
       setSubmitStatus('error');
       setSubmitMessage(error instanceof Error ? error.message : 'Unable to submit bracket.');
@@ -183,7 +189,9 @@ export default function BracketForm() {
           )}
         >
           <Send className="h-4 w-4" />
-          {submitStatus === 'submitting' ? 'Submitting...' : 'Submit bracket'}
+          {submitStatus === 'submitting'
+            ? hasSavedBracket ? 'Updating...' : 'Submitting...'
+            : hasSavedBracket ? 'Update bracket' : 'Submit bracket'}
         </button>
       </div>
 

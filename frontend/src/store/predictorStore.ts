@@ -18,6 +18,7 @@ interface PredictorState {
   thirdPicks: string[];
   knockoutPicks: KnockoutPicks;
   activeTab: PredictorTab;
+  hasSavedBracket: boolean;
 
   // Actions
   setRank: (groupId: string, teamId: string, rank: 1 | 2 | 3) => void;
@@ -26,6 +27,7 @@ interface PredictorState {
   setKnockoutWinner: (matchId: KnockoutMatchId, teamId: string) => void;
   setActiveTab: (tab: PredictorTab) => void;
   loadBracketData: (bracketData: BracketDataPayload | null) => void;
+  markBracketSaved: () => void;
   reset: () => void;
 
   // Derived values - call these as functions.
@@ -47,6 +49,7 @@ export const usePredictorStore = create<PredictorState>()(
       thirdPicks: [],
       knockoutPicks: {},
       activeTab: 'groups',
+      hasSavedBracket: false,
 
       setRank: (groupId, teamId, rank) => {
         set((state) => {
@@ -116,7 +119,13 @@ export const usePredictorStore = create<PredictorState>()(
 
       loadBracketData: (bracketData) => {
         if (!bracketData) {
-          set({ picks: {}, thirdPicks: [], knockoutPicks: {}, activeTab: 'groups' });
+          set({
+            picks: {},
+            thirdPicks: [],
+            knockoutPicks: {},
+            activeTab: 'groups',
+            hasSavedBracket: false,
+          });
           return;
         }
 
@@ -145,8 +154,11 @@ export const usePredictorStore = create<PredictorState>()(
           thirdPicks: [...bracketData.wildcards],
           knockoutPicks,
           activeTab,
+          hasSavedBracket: true,
         });
       },
+
+      markBracketSaved: () => set({ hasSavedBracket: true }),
 
       reset: () => set({ picks: {}, thirdPicks: [], knockoutPicks: {}, activeTab: 'groups' }),
 
