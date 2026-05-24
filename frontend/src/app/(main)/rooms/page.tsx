@@ -23,7 +23,7 @@ export default function RoomsPage() {
       setError(null);
       
       // Grab the user_id from localStorage (matching your current setup)
-      const userId = localStorage.getItem('username'); 
+      const userId = localStorage.getItem('user_id'); 
       if (!userId) {
         throw new Error('Not authenticated');
       }
