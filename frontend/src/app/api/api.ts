@@ -82,6 +82,28 @@ export const submitBracketPayload = async (payload: CreatePredictionRequest): Pr
 
 };
 
+export const updateBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
+  const token = localStorage.getItem('access_token');
+
+  if (!token) {
+    throw new Error('Please log in before updating your bracket.');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/update`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || `Update request failed with ${response.status}`);
+  }
+};
+
 export interface RetrieveBracketResponse {
   bracket_data: BracketDataPayload | null;
 }
