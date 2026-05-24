@@ -1,3 +1,5 @@
+import type { CreatePredictionRequest } from '@/src/lib/types';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
 
 //================================================ AUTH ============================================
@@ -58,10 +60,19 @@ export const logoutUser = () => {
 //============================================= GAME LOGIC ============================================
 
 
-export const submitBracketPayload = async (payload: any): Promise<void> => {
+export const submitBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
+  const token = localStorage.getItem('access_token');
+
+  if (!token) {
+    throw new Error('Please log in before submitting your bracket.');
+  }
+
   const response = await fetch(`${API_BASE_URL}/store`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
     body: JSON.stringify(payload),
   });
 
