@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from services.rooms import create_room, join_room, get_my_rooms
+from services.rooms import create_room, join_room, get_user_rooms
 
 router = APIRouter(    
     prefix="/rooms",
@@ -35,7 +35,7 @@ def api_join_room(room_id: str, req: RoomJoinRequest):
 @router.get("/")
 def api_get_user_rooms(user_id: str):
     try:
-        rooms = get_my_rooms(user_id)
+        rooms = get_user_rooms(user_id)
         return {"rooms": rooms}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

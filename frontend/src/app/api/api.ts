@@ -7,6 +7,7 @@ export interface LoginResponse {
   access_token: string;
   refresh_token: string;
   user: string;
+  user_id: string;
 }
 
 export const signupUser = async (username: string, password: string) => {
@@ -50,6 +51,7 @@ export const logoutUser = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('username');
+  localStorage.removeItem('user_id');
   window.location.reload(); 
 };
 

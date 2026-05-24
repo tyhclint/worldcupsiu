@@ -31,7 +31,8 @@ async def login(req: AuthRequest):
             "message": "Login successful",
             "access_token": response.session.access_token,
             "refresh_token": response.session.refresh_token,
-            "user": response.user.user_metadata.get("username")
+            "user": response.user.user_metadata.get("username"),    
+            "user_id": response.user.id
         }
         
     except Exception as e:
