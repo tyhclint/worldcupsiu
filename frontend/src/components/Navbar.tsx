@@ -3,21 +3,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Trophy, Users, LogIn, LogOut } from 'lucide-react';
-import { cn } from '@/src/utils/merge';
 
 
 export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Grab the username on initial load
-    setUsername(localStorage.getItem('username'));
-
-    // 2. Listen for our custom login/logout event
     const handleAuthChange = () => {
       setUsername(localStorage.getItem('username'));
     };
 
+    handleAuthChange();
     window.addEventListener('auth-change', handleAuthChange);
     return () => window.removeEventListener('auth-change', handleAuthChange);
   }, []);

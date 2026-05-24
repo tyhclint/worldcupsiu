@@ -2,7 +2,7 @@ from fastapi import APIRouter, Header, HTTPException
 
 from core.config import supabase
 from schemas.knockout_format import CreatePredictionRequest
-from services.predictions import insert_prediction
+from services.predictions import insert_prediction, retrieve_prediction
 from services.auth import get_access_token
 
 
@@ -35,4 +35,19 @@ def store_prediction(payload: CreatePredictionRequest, authorization: str = Head
         "valid": True,
         "message": "Prediction stored",
         "prediction": stored_prediction,
+    }
+
+
+@router.get("/retrieve")
+def retrieve_user_prediction(authorization: str = Header(...)):
+    access_token = get_access_token(authorization)
+
+    try:
+        user_response = supabase.auth.get_user(access_token)
+        bracket_data = retrieve_prediction(user_response.user.id, access_token)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="Failed to retrieve prediction") from exc
+
+    return {
+        "bracket_data": bracket_data,
     }
