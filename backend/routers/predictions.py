@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Header, HTTPException
 
+from core.config import supabase
 from schemas.knockout_format import CreatePredictionRequest
 from services.predictions import insert_prediction
+from services.auth import get_access_token
 
 
 router = APIRouter(
     tags=["predictions"],
 )
-
 
 @router.post("/score")
 def score_prediction(payload: CreatePredictionRequest):
@@ -21,11 +22,12 @@ def score_prediction(payload: CreatePredictionRequest):
     }
 
 @router.post("/store")
-def store_prediction(payload: CreatePredictionRequest):
+def store_prediction(payload: CreatePredictionRequest, authorization: str = Header(...)):
+    access_token = get_access_token(authorization)
     bracket_data = payload.bracket_data.model_dump(mode="json")
 
     try:
-        stored_prediction = insert_prediction(bracket_data)
+        stored_prediction = insert_prediction(bracket_data, access_token)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Failed to store prediction") from exc
 
