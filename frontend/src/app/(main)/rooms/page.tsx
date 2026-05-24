@@ -47,7 +47,7 @@ export default function RoomsPage() {
     const roomName = window.prompt('Enter a name for your new room:');
     if (!roomName) return;
 
-    const userId = localStorage.getItem('username');
+    const userId = localStorage.getItem('user_id');
     if (!userId) {
       alert('You must be logged in to create a room.');
       return;
