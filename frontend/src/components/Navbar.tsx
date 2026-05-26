@@ -16,6 +16,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
       setUsername(localStorage.getItem('username'));
     };
 
+    handleAuthChange();
     window.addEventListener('auth-change', handleAuthChange);
     return () => window.removeEventListener('auth-change', handleAuthChange);
   }, []);

@@ -5,6 +5,7 @@ import { DOWNSTREAM_MATCH_IDS } from '@/src/lib/bracketConfig';
 import { GROUPS, getTeamById } from '@/src/lib/db';
 import {
   AllGroupPicks,
+  BracketDataPayload,
   CreatePredictionRequest,
   KnockoutMatchId,
   KnockoutPicks,
@@ -17,6 +18,7 @@ interface PredictorState {
   thirdPicks: string[];
   knockoutPicks: KnockoutPicks;
   activeTab: PredictorTab;
+  hasSavedBracket: boolean;
 
   // Actions
   setRank: (groupId: string, teamId: string, rank: 1 | 2 | 3) => void;
@@ -24,6 +26,8 @@ interface PredictorState {
   toggleThirdPick: (teamId: string) => void;
   setKnockoutWinner: (matchId: KnockoutMatchId, teamId: string) => void;
   setActiveTab: (tab: PredictorTab) => void;
+  loadBracketData: (bracketData: BracketDataPayload | null) => void;
+  markBracketSaved: () => void;
   reset: () => void;
 
   // Derived values - call these as functions.
@@ -45,6 +49,7 @@ export const usePredictorStore = create<PredictorState>()(
       thirdPicks: [],
       knockoutPicks: {},
       activeTab: 'groups',
+      hasSavedBracket: false,
 
       setRank: (groupId, teamId, rank) => {
         set((state) => {
@@ -111,6 +116,49 @@ export const usePredictorStore = create<PredictorState>()(
       },
 
       setActiveTab: (tab) => set({ activeTab: tab }),
+
+      loadBracketData: (bracketData) => {
+        if (!bracketData) {
+          set({
+            picks: {},
+            thirdPicks: [],
+            knockoutPicks: {},
+            activeTab: 'groups',
+            hasSavedBracket: false,
+          });
+          return;
+        }
+
+        const picks = Object.entries(bracketData.group_stage).reduce<AllGroupPicks>(
+          (acc, [groupKey, groupPicks]) => {
+            const groupId = groupKey.replace('Group_', '');
+            acc[groupId] = {
+              1: groupPicks.first,
+              2: groupPicks.second,
+              3: groupPicks.third,
+            };
+            return acc;
+          },
+          {},
+        );
+
+        const knockoutPicks = { ...bracketData.knockouts };
+        const activeTab = Object.keys(knockoutPicks).length > 0
+          ? 'bracket'
+          : bracketData.wildcards.length > 0
+            ? 'third'
+            : 'groups';
+
+        set({
+          picks,
+          thirdPicks: [...bracketData.wildcards],
+          knockoutPicks,
+          activeTab,
+          hasSavedBracket: true,
+        });
+      },
+
+      markBracketSaved: () => set({ hasSavedBracket: true }),
 
       reset: () => set({ picks: {}, thirdPicks: [], knockoutPicks: {}, activeTab: 'groups' }),
 

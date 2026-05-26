@@ -35,8 +35,8 @@ export default function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
       
       onSuccess(data.user);
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setLoading(false);
     }
