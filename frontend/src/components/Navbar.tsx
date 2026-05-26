@@ -3,12 +3,15 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Trophy, Users, LogIn, LogOut } from 'lucide-react';
+import {logoutUser} from '@/src/app/api/api';
+import { cn } from '@/src/utils/merge';
 
 
 export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
+    setUsername(localStorage.getItem('username'));
     const handleAuthChange = () => {
       setUsername(localStorage.getItem('username'));
     };
@@ -19,9 +22,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('username');
+    logoutUser();
     
     window.dispatchEvent(new Event('auth-change'));
     

@@ -9,6 +9,7 @@ export interface LoginResponse {
   access_token: string;
   refresh_token: string;
   user: string;
+  user_id: string;
 }
 
 export const signupUser = async (username: string, password: string) => {
@@ -52,6 +53,7 @@ export const logoutUser = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('username');
+  localStorage.removeItem('user_id');
   window.location.reload(); 
 };
 
@@ -126,6 +128,63 @@ export const retrieveBracketPayload = async (): Promise<RetrieveBracketResponse>
 
   if (!response.ok) {
     throw new Error(data.detail || 'Failed to load bracket');
+  }
+
+  return data;
+};
+
+
+
+//=============================================== ROOMS ==============================================
+
+export const createRoom = async (name: string, userId: string) => {
+  const response = await fetch(`${API_BASE_URL}/rooms/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, user_id: userId }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to create room');
+  }
+
+  return data;
+};
+
+export const joinRoom = async (roomId: string, userId: string) => {
+  const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/join`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ user_id: userId }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to join room');
+  }
+
+  return data;
+};
+
+export const getUserRooms = async (userId: string) => {
+  const response = await fetch(`${API_BASE_URL}/rooms/?user_id=${userId}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to fetch rooms');
   }
 
   return data;

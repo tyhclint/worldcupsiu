@@ -17,6 +17,12 @@ def register_user(username: str, password: str):
             }
         }
     })
+
+    supabase.table("users").insert({
+        "user_id": response.user.id,
+        "username": username,
+    }).execute()
+
     return response
 
 def authenticate_user(username: str, password: str):
