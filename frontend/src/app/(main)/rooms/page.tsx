@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { getUserRooms, createRoom } from '@/src/app/api/api';
+import RoomModal from '@/src/components/RoomModal'; // Adjust path based on where you save it
 
-// 1. Define the actual shape of the data coming from your backend
+// 1. Define the actual shape of the data
 interface Room {
   id: string;
   name: string;
@@ -15,6 +16,9 @@ export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // NEW: State to track which room is open in the modal
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
   // 2. Fetch rooms on component mount
   const fetchRooms = async () => {
@@ -22,7 +26,6 @@ export default function RoomsPage() {
       setIsLoading(true);
       setError(null);
       
-      // Grab the user_id from localStorage (matching your current setup)
       const userId = localStorage.getItem('user_id'); 
       if (!userId) {
         throw new Error('Not authenticated');
@@ -43,7 +46,6 @@ export default function RoomsPage() {
 
   // 3. Handle Creating a New Room
   const handleCreateRoom = async () => {
-    // Using a quick browser prompt for testing. You can upgrade this to a nice Modal later!
     const roomName = window.prompt('Enter a name for your new room:');
     if (!roomName) return;
 
@@ -55,7 +57,7 @@ export default function RoomsPage() {
 
     try {
       await createRoom(roomName, userId);
-      fetchRooms(); // Refresh the list so the new room appears instantly
+      fetchRooms(); 
     } catch (err: any) {
       alert(`Error creating room: ${err.message}`);
     }
@@ -79,7 +81,7 @@ export default function RoomsPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="max-w-6xl mx-auto px-6 py-8 relative">
       {rooms.length === 0 ? (
         /* =========================================
            EMPTY STATE
@@ -102,7 +104,7 @@ export default function RoomsPage() {
            ========================================= */
         <div className="space-y-8 animate-in fade-in duration-500">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">My Rooms</h1>
+            <h1 className="text-3xl font-bold text-gray-900">My Rooms</h1>
             <button 
               onClick={handleCreateRoom}
               className="flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-all shadow-sm"
@@ -116,25 +118,28 @@ export default function RoomsPage() {
             {rooms.map((room) => (
               <div 
                 key={room.id} 
-                className="group relative flex flex-col items-center justify-center aspect-square bg-[#9CA3AF] rounded-[2.5rem] p-8 text-center transition-transform hover:-translate-y-1 hover:shadow-lg cursor-pointer"
+                onClick={() => setSelectedRoom(room)} // NEW: Triggers modal
+                className="group relative flex flex-col items-center justify-center h-56 bg-slate-50 border border-slate-200 rounded-[2rem] p-8 text-center transition-all hover:-translate-y-1 hover:shadow-md hover:bg-white cursor-pointer"
               >
-                {/* Room Title */}
-                <h2 className="text-xl font-bold text-gray-900 mb-6 group-hover:text-black transition-colors">
+                <h2 className="text-xl font-bold text-gray-800 mb-4 group-hover:text-black transition-colors">
                   {room.name}
                 </h2>
 
-                {/* Leaderboard Placeholder */}
-                <div className="flex flex-col gap-2 text-sm font-medium text-gray-800">
-                  <div className="flex items-center justify-center gap-2 text-gray-700 italic text-xs">
-                    Leaderboard data coming soon...
-                  </div>
-                  <span className="text-gray-700 tracking-[0.2em] mt-2 font-bold">....</span>
+                <div className="flex flex-col gap-1 text-sm font-medium text-gray-500">
+                  <span className="italic text-xs">Leaderboard data coming soon...</span>
+                  <span className="tracking-[0.2em] font-bold">....</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* Render the extracted modal Component */}
+      <RoomModal 
+        room={selectedRoom} 
+        onClose={() => setSelectedRoom(null)} 
+      />
     </div>
   );
 }
