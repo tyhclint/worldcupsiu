@@ -176,6 +176,30 @@ class CreatePredictionRequest(BaseModel):
     bracket_data: BracketDataSchema
 
 
+class ScorePredictionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    bracket_data: BracketDataSchema | None = None
+    group_stage: Dict[GroupKey, GroupPlacements] | None = None
+
+    @field_validator("group_stage")
+    @classmethod
+    def must_have_all_groups(
+        cls,
+        value: Dict[GroupKey, GroupPlacements] | None,
+    ) -> Dict[GroupKey, GroupPlacements] | None:
+        if value is None:
+            return value
+
+        return BracketDataSchema.must_have_all_groups(value)
+
+    @model_validator(mode="after")
+    def must_include_scoreable_groups(self) -> "ScorePredictionRequest":
+        if self.bracket_data is None and self.group_stage is None:
+            raise ValueError("Missing group_stage predictions")
+        return self
+
+
 class UserPredictionSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

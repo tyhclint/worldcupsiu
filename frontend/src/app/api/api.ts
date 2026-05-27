@@ -1,6 +1,9 @@
-import type { BracketDataPayload, CreatePredictionRequest } from '@/src/lib/types';
+import type {
+  BracketDataPayload,
+  CreatePredictionRequest,
+} from "@/src/lib/types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 //================================================ AUTH ============================================
 
@@ -14,9 +17,9 @@ export interface LoginResponse {
 
 export const signupUser = async (username: string, password: string) => {
   const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ username, password }),
   });
@@ -24,17 +27,20 @@ export const signupUser = async (username: string, password: string) => {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to sign up');
+    throw new Error(data.detail || "Failed to sign up");
   }
 
   return data;
 };
 
-export const loginUser = async (username: string, password: string): Promise<LoginResponse> => {
+export const loginUser = async (
+  username: string,
+  password: string,
+): Promise<LoginResponse> => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ username, password }),
   });
@@ -42,37 +48,35 @@ export const loginUser = async (username: string, password: string): Promise<Log
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to login');
+    throw new Error(data.detail || "Failed to login");
   }
 
   return data;
 };
-
 
 export const logoutUser = () => {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refresh_token');
-  localStorage.removeItem('username');
-  localStorage.removeItem('user_id');
-  window.location.reload(); 
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  localStorage.removeItem("username");
+  localStorage.removeItem("user_id");
+  window.location.reload();
 };
-
-
 
 //============================================= GAME LOGIC ============================================
 
-
-export const submitBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
-  const token = localStorage.getItem('access_token');
+export const submitBracketPayload = async (
+  payload: CreatePredictionRequest,
+): Promise<void> => {
+  const token = localStorage.getItem("access_token");
 
   if (!token) {
-    throw new Error('Please log in before submitting your bracket.');
+    throw new Error("Please log in before submitting your bracket.");
   }
 
   const response = await fetch(`${API_BASE_URL}/store`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
@@ -81,20 +85,21 @@ export const submitBracketPayload = async (payload: CreatePredictionRequest): Pr
   if (!response.ok) {
     throw new Error(`Store request failed with ${response.status}`);
   }
-
 };
 
-export const updateBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
-  const token = localStorage.getItem('access_token');
+export const updateBracketPayload = async (
+  payload: CreatePredictionRequest,
+): Promise<void> => {
+  const token = localStorage.getItem("access_token");
 
   if (!token) {
-    throw new Error('Please log in before updating your bracket.');
+    throw new Error("Please log in before updating your bracket.");
   }
 
   const response = await fetch(`${API_BASE_URL}/update`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
@@ -102,7 +107,9 @@ export const updateBracketPayload = async (payload: CreatePredictionRequest): Pr
 
   if (!response.ok) {
     const data = await response.json();
-    throw new Error(data.detail || `Update request failed with ${response.status}`);
+    throw new Error(
+      data.detail || `Update request failed with ${response.status}`,
+    );
   }
 };
 
@@ -110,38 +117,66 @@ export interface RetrieveBracketResponse {
   bracket_data: BracketDataPayload | null;
 }
 
-export const retrieveBracketPayload = async (): Promise<RetrieveBracketResponse> => {
-  const token = localStorage.getItem('access_token');
+export const retrieveBracketPayload =
+  async (): Promise<RetrieveBracketResponse> => {
+    const token = localStorage.getItem("access_token");
 
-  if (!token) {
-    throw new Error('Please log in before loading your bracket.');
-  }
+    if (!token) {
+      throw new Error("Please log in before loading your bracket.");
+    }
 
-  const response = await fetch(`${API_BASE_URL}/retrieve`, {
-    method: 'GET',
+    const response = await fetch(`${API_BASE_URL}/retrieve`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.detail || "Failed to load bracket");
+    }
+
+    return data;
+  };
+
+export interface ScoreGroupStageResponse {
+  valid: boolean;
+  score: number;
+  lower_is_better: boolean;
+  group_count: number;
+}
+
+export const scoreGroupStagePayload = async (
+  payload: Pick<BracketDataPayload, "group_stage">,
+): Promise<ScoreGroupStageResponse> => {
+  const response = await fetch(`${API_BASE_URL}/score/group-stage`, {
+    method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify(payload),
   });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to load bracket');
+    throw new Error(
+      data.detail || `Score request failed with ${response.status}`,
+    );
   }
 
   return data;
 };
 
-
-
 //=============================================== ROOMS ==============================================
 
 export const createRoom = async (name: string, userId: string) => {
   const response = await fetch(`${API_BASE_URL}/rooms/`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ name, user_id: userId }),
   });
@@ -149,7 +184,7 @@ export const createRoom = async (name: string, userId: string) => {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to create room');
+    throw new Error(data.detail || "Failed to create room");
   }
 
   return data;
@@ -157,9 +192,9 @@ export const createRoom = async (name: string, userId: string) => {
 
 export const joinRoom = async (roomId: string, userId: string) => {
   const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/join`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({ user_id: userId }),
   });
@@ -167,7 +202,7 @@ export const joinRoom = async (roomId: string, userId: string) => {
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to join room');
+    throw new Error(data.detail || "Failed to join room");
   }
 
   return data;
@@ -175,16 +210,16 @@ export const joinRoom = async (roomId: string, userId: string) => {
 
 export const getUserRooms = async (userId: string) => {
   const response = await fetch(`${API_BASE_URL}/rooms/?user_id=${userId}`, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.detail || 'Failed to fetch rooms');
+    throw new Error(data.detail || "Failed to fetch rooms");
   }
 
   return data;
