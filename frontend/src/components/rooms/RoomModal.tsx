@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+import { useState } from 'react';
+import { X, Copy, Check } from 'lucide-react'; // Added icons for the button
 
 interface RoomModalProps {
   room: {
@@ -9,7 +10,20 @@ interface RoomModalProps {
 }
 
 export default function RoomModal({ room, onClose }: RoomModalProps) {
+  const [copied, setCopied] = useState(false);
+
   if (!room) return null;
+
+  // The Invite Logic
+  const handleInviteClick = () => {
+    // Uses the room.id (UUID) to create the unique join link
+    const inviteLink = `${window.location.origin}/rooms/${room.id}/join`;
+
+    navigator.clipboard.writeText(inviteLink).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reset button after 2 seconds
+    });
+  };
 
   // Dummy data to map over until your backend endpoint is ready
   const dummyParticipants = [
@@ -29,17 +43,33 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
       {/* Modal Content Box */}
       <div className="relative bg-white w-full max-w-2xl rounded-2xl shadow-2xl p-6 md:p-8 z-10 animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Close Button */}
-        <button 
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        {/* Header Section (Title + Invite + Close) */}
+        <div className="flex justify-between items-start mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mt-1">
+            {room.name} Leaderboard
+          </h2>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={handleInviteClick}
+              className={`flex items-center gap-2 text-sm px-4 py-2 rounded-lg font-medium transition-all ${
+                copied 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+              }`}
+            >
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? 'Link Copied!' : 'Invite Friends'}
+            </button>
 
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          {room.name} Leaderboard
-        </h2>
+            <button 
+              onClick={onClose}
+              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
 
         {/* Participants List */}
         <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto pr-2">

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { getUserRooms, createRoom } from '@/src/app/api/api';
-import RoomModal from '@/src/components/RoomModal'; // Adjust path based on where you save it
+import RoomModal from '@/src/components/rooms/RoomModal'; // Adjust path based on where you save it
 
 // 1. Define the actual shape of the data
 interface Room {
