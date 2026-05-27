@@ -76,8 +76,10 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   }
 
   let response = await fetch(url, { ...options, headers });
+  const clonedResponse = response.clone();
+  const responseText = await clonedResponse.text();
 
-  if (response.status === 401) {
+  if (response.status === 401 || responseText.includes('PGRST303') || responseText.includes('JWT expired')) {
     const refreshToken = localStorage.getItem('refresh_token');
 
     if (refreshToken) {
