@@ -62,6 +62,7 @@ export const logoutUser = () => {
   window.location.reload();
 };
 
+
 //=========================================== AUTH WRAPPER ===========================================
 
 export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
@@ -87,7 +88,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
         const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken }),
+          body: JSON.stringify({ refresh_token: refreshToken }), // Adjust based on your backend
         });
 
         if (refreshResponse.ok) {
@@ -118,6 +119,8 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
 
   return response;
 };
+
+
 
 //============================================= GAME LOGIC ============================================
 
@@ -152,33 +155,6 @@ export interface RetrieveBracketResponse {
 export const retrieveBracketPayload = async (): Promise<RetrieveBracketResponse> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/retrieve`, {
     method: 'GET',
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.detail || "Failed to load bracket");
-  }
-
-  return data;
-};
-
-export interface ScoreGroupStageResponse {
-  valid: boolean;
-  score: number;
-  lower_is_better: boolean;
-  group_count: number;
-}
-
-export const scoreGroupStagePayload = async (
-  payload: Pick<BracketDataPayload, "group_stage">,
-): Promise<ScoreGroupStageResponse> => {
-  const response = await fetch(`${API_BASE_URL}/score/group-stage`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
   });
 
   const data = await response.json();
