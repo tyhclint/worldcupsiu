@@ -1,6 +1,8 @@
 // src/components/LoginForm.tsx
 import { useState } from 'react';
 import { loginUser, signupUser } from '@/src/app/api/api';
+import { useRouter, useSearchParams } from 'next/navigation';
+import router from 'next/dist/shared/lib/router/router';
 
 interface LoginFormProps {
   onSuccess: (username: string) => void;
@@ -8,6 +10,8 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
   
   const [username, setUsername] = useState('');
@@ -27,6 +31,7 @@ export default function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
 
       const data = await loginUser(username, password);
 
+
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('refresh_token', data.refresh_token);
       localStorage.setItem('username', data.user);
@@ -34,6 +39,14 @@ export default function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
       window.dispatchEvent(new Event('auth-change'));
       
       onSuccess(data.user);
+
+      const redirectTo = searchParams.get('redirectTo');
+
+      if (redirectTo) {
+        router.push(redirectTo); // Sends them to the room join page
+      } else {
+        router.push('/'); // Sends them to the normal home dashboard
+      }
 
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong.');

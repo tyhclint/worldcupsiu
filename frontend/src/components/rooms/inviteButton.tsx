@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function LeaderboardHeader({ roomId, roomName }) {
+export default function LeaderboardHeader({ roomId, roomName } : { roomId: string, roomName: string }) {
   const [copied, setCopied] = useState(false);
 
   const handleInviteClick = () => {

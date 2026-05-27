@@ -1,13 +1,6 @@
 import { useState } from 'react';
-import { X, Copy, Check } from 'lucide-react'; // Added icons for the button
-
-interface RoomModalProps {
-  room: {
-    id: string;
-    name: string;
-  } | null;
-  onClose: () => void;
-}
+import { X, Copy, Check } from 'lucide-react';
+import { RoomModalProps } from '@/src/interfaces/Room';
 
 export default function RoomModal({ room, onClose }: RoomModalProps) {
   const [copied, setCopied] = useState(false);
