@@ -238,3 +238,16 @@ export const getUserRooms = async (userId: string) => {
 
   return data;
 };
+
+export const getRoomMembers = async (roomId: string) => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/rooms/${roomId}/members`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to fetch room members');
+  }
+
+  return response.json();
+};

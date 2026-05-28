@@ -29,23 +29,37 @@ const RANK_STYLES = {
   },
 } as const;
 
-export default function GroupStageForm() {
-  const { picks, setRank, isGroupComplete, allGroupsComplete, completedGroupCount, setActiveTab } =
-    usePredictorStore();
+interface GroupStageFormProps {
+  readOnlyData?: {
+    picks: any;
+  } | null;
+}
+
+export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {}) {
+  const store = usePredictorStore();
+
+  // The Toggle: Are we viewing a static bracket or editing our own?
+  const isReadOnly = !!readOnlyData;
+  const activePicks = isReadOnly ? readOnlyData.picks : store.picks;
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">
-        Pick the top 2 teams to qualify from each group. The 3rd-place team is used in the next step.
-      </p>
+      {/* Hide instructions if read-only */}
+      {!isReadOnly && (
+        <p className="text-sm text-gray-500">
+          Pick the top 2 teams to qualify from each group. The 3rd-place team is used in the next step.
+        </p>
+      )}
 
       {/* 4-column grid — horizontal scroll on mobile */}
       <div className="overflow-x-auto -mx-6 px-6 pb-2">
         <div className="grid grid-cols-4 gap-3 min-w-[900px] md:min-w-0">
           {GROUPS.map((group) => {
-            const gp = picks[group.id] ?? {};
-            const complete = isGroupComplete(group.id);
+            const gp = activePicks[group.id] ?? {};
+            
+            // Calculate progress inline so it works for both store and readOnly data
             const rankedCount = ([1, 2, 3] as const).filter((r) => gp[r]).length;
+            const complete = rankedCount === 3;
             const progressPct = Math.round((rankedCount / 3) * 100);
 
             return (
@@ -53,7 +67,7 @@ export default function GroupStageForm() {
                 key={group.id}
                 className={cn(
                   'rounded-lg border bg-white overflow-hidden transition-all duration-200',
-                  'hover:-translate-y-0.5 hover:shadow-md',
+                  !isReadOnly && 'hover:-translate-y-0.5 hover:shadow-md',
                   complete ? 'border-teal-200' : 'border-gray-200'
                 )}
               >
@@ -137,12 +151,15 @@ export default function GroupStageForm() {
                             return (
                               <button
                                 key={rank}
-                                onClick={() => setRank(group.id, team.id, rank)}
+                                onClick={isReadOnly ? undefined : () => store.setRank(group.id, team.id, rank)}
+                                disabled={isReadOnly}
                                 className={cn(
                                   'h-6 w-6 rounded-md border text-[11px] font-bold transition-all duration-150',
                                   isActive
                                     ? styles.active
-                                    : cn('border-gray-200 text-gray-400 bg-transparent', styles.hover)
+                                    : cn('border-gray-200 text-gray-400 bg-transparent', !isReadOnly && styles.hover),
+                                  isReadOnly && !isActive && 'opacity-30', // Dim unused buttons when reading
+                                  isReadOnly && 'cursor-default' // Change cursor so it doesn't look clickable
                                 )}
                               >
                                 {rank}
@@ -168,24 +185,26 @@ export default function GroupStageForm() {
         </div>
       </div>
 
-      {/* Progress CTA */}
-      <div>
-        {allGroupsComplete() ? (
-          <button
-            onClick={() => setActiveTab('third')}
-            className="w-full rounded-lg bg-red-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600"
-          >
-            All groups done! Pick 3rd place qualifiers →
-          </button>
-        ) : (
-          <button
-            disabled
-            className="w-full rounded-lg bg-gray-100 py-3 text-sm font-medium text-gray-400 cursor-not-allowed"
-          >
-            {completedGroupCount()} / {GROUPS.length} groups complete
-          </button>
-        )}
-      </div>
+      {/* Progress CTA - Hidden entirely in read-only mode */}
+      {!isReadOnly && (
+        <div>
+          {store.allGroupsComplete() ? (
+            <button
+              onClick={() => store.setActiveTab('third')}
+              className="w-full rounded-lg bg-red-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+            >
+              All groups done! Pick 3rd place qualifiers →
+            </button>
+          ) : (
+            <button
+              disabled
+              className="w-full rounded-lg bg-gray-100 py-3 text-sm font-medium text-gray-400 cursor-not-allowed"
+            >
+              {store.completedGroupCount()} / {GROUPS.length} groups complete
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

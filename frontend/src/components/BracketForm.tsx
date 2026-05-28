@@ -117,36 +117,37 @@ function ConnectorLines({
   );
 }
 
-export default function BracketForm() {
-  const {
-    picks,
-    thirdPicks,
-    knockoutPicks,
-    setKnockoutWinner,
-    isBracketComplete,
-    buildPredictionPayload,
-    hasSavedBracket,
-    markBracketSaved,
-  } = usePredictorStore();
+interface BracketFormProps {
+  readOnlyData?: {
+    picks: any;
+    thirdPicks: string[];
+    knockoutPicks: any;
+  } | null;
+}
+
+export default function BracketForm({ readOnlyData }: BracketFormProps) {
+  const store = usePredictorStore();
+  
+  const isReadOnly = !!readOnlyData;
+  const activePicks = isReadOnly ? readOnlyData.picks : store.picks;
+  const activeThirdPicks = isReadOnly ? readOnlyData.thirdPicks : store.thirdPicks;
+  const activeKnockoutPicks = isReadOnly ? readOnlyData.knockoutPicks : store.knockoutPicks;
   
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
 
   const matchesByRound = useMemo(
-    () => resolveMatchesByRound(picks, thirdPicks, knockoutPicks),
-    [picks, thirdPicks, knockoutPicks],
+    () => resolveMatchesByRound(activePicks, activeThirdPicks, activeKnockoutPicks),
+    [activePicks, activeThirdPicks, activeKnockoutPicks],
   );
 
-  const champion = knockoutPicks.M104;
+  const champion = activeKnockoutPicks.M104;
   const championTeam = champion
-    ? Object.values(matchesByRound)
-        .flat()
-        .find((match) => match.id === 'M104')
-        ?.winner
+    ? Object.values(matchesByRound).flat().find((match) => match.id === 'M104')?.winner
     : null;
 
   async function submitBracket() {
-    const payload = buildPredictionPayload();
+    const payload = store.buildPredictionPayload();
     if (!payload) {
       setSubmitStatus('error');
       setSubmitMessage('Complete every knockout match before submitting.');
@@ -157,15 +158,15 @@ export default function BracketForm() {
     setSubmitMessage('');
 
     try {
-      if (hasSavedBracket) {
+      if (store.hasSavedBracket) {
         await updateBracketPayload(payload);
       } else {
         await submitBracketPayload(payload);
-        markBracketSaved();
+        store.markBracketSaved();
       }
 
       setSubmitStatus('success');
-      setSubmitMessage(hasSavedBracket ? 'Bracket successfully updated.' : 'Bracket payload successfully saved.');
+      setSubmitMessage(store.hasSavedBracket ? 'Bracket successfully updated.' : 'Bracket payload successfully saved.');
     } catch (error) {
       setSubmitStatus('error');
       setSubmitMessage(error instanceof Error ? error.message : 'Unable to submit bracket.');
@@ -174,26 +175,29 @@ export default function BracketForm() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-500">
-          Pick winners through Match 104. Later rounds unlock as winners advance.
-        </p>
-        <button
-          disabled={!isBracketComplete() || submitStatus === 'submitting'}
-          onClick={submitBracket}
-          className={cn(
-            'inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors',
-            isBracketComplete() && submitStatus !== 'submitting'
-              ? 'bg-red-500 text-white hover:bg-red-600'
-              : 'cursor-not-allowed bg-gray-100 text-gray-400',
-          )}
-        >
-          <Send className="h-4 w-4" />
-          {submitStatus === 'submitting'
-            ? hasSavedBracket ? 'Updating...' : 'Submitting...'
-            : hasSavedBracket ? 'Update bracket' : 'Submit bracket'}
-        </button>
-      </div>
+      
+      {!isReadOnly && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-gray-500">
+            Pick winners through Match 104. Later rounds unlock as winners advance.
+          </p>
+          <button
+            disabled={!store.isBracketComplete() || submitStatus === 'submitting'}
+            onClick={submitBracket}
+            className={cn(
+              'inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors',
+              store.isBracketComplete() && submitStatus !== 'submitting'
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'cursor-not-allowed bg-gray-100 text-gray-400',
+            )}
+          >
+            <Send className="h-4 w-4" />
+            {submitStatus === 'submitting'
+              ? store.hasSavedBracket ? 'Updating...' : 'Submitting...'
+              : store.hasSavedBracket ? 'Update bracket' : 'Submit bracket'}
+          </button>
+        </div>
+      )}
 
       {championTeam && (
         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
@@ -240,8 +244,8 @@ export default function BracketForm() {
                 </div>
 
                 {matches.map((match, matchIndex) => {
-                  const selectedWinner = knockoutPicks[match.id];
-                  const disabled = !match.ready;
+                  const selectedWinner = activeKnockoutPicks[match.id];
+                  const disabled = isReadOnly || !match.ready; 
 
                   return (
                     <div
@@ -269,13 +273,13 @@ export default function BracketForm() {
                           team={match.teamAResolved}
                           selected={selectedWinner === match.teamAResolved?.id}
                           disabled={disabled}
-                          onClick={() => match.teamAResolved && setKnockoutWinner(match.id, match.teamAResolved.id)}
+                          onClick={() => !isReadOnly && match.teamAResolved && store.setKnockoutWinner(match.id, match.teamAResolved.id)}
                         />
                         <TeamButton
                           team={match.teamBResolved}
                           selected={selectedWinner === match.teamBResolved?.id}
                           disabled={disabled}
-                          onClick={() => match.teamBResolved && setKnockoutWinner(match.id, match.teamBResolved.id)}
+                          onClick={() => !isReadOnly && match.teamBResolved && store.setKnockoutWinner(match.id, match.teamBResolved.id)}
                         />
                       </div>
                     </div>
@@ -286,13 +290,12 @@ export default function BracketForm() {
           })}
         </div>
       </div>
-
-      {submitMessage && (
+      
+      {!isReadOnly && submitMessage && (
         <p className={cn(
           'text-sm font-medium',
           submitStatus === 'success' ? 'text-teal-600' : 'text-red-600',
-        )}
-        >
+        )}>
           {submitMessage}
         </p>
       )}
