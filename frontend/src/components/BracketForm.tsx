@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Send, Trophy } from 'lucide-react';
+import { toast } from 'sonner';
 import { resolveMatchesByRound, type ResolvedTeam } from '@/src/lib/bracket';
 import { ROUND_LABELS, ROUND_ORDER } from '@/src/lib/bracketConfig';
 import { usePredictorStore } from '@/src/store/predictorStore';
@@ -166,14 +167,16 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
     if (!payload) {
       setSubmitStatus('error');
       setSubmitMessage('Complete every knockout match before submitting.');
+      toast.error('Complete every knockout match before submitting.');
       return;
     }
 
     setSubmitStatus('submitting');
     setSubmitMessage('');
+    const isUpdating = store.hasSavedBracket;
 
     try {
-      if (store.hasSavedBracket) {
+      if (isUpdating) {
         await updateBracketPayload(payload);
       } else {
         await submitBracketPayload(payload);
@@ -181,10 +184,17 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
       }
 
       setSubmitStatus('success');
-      setSubmitMessage(store.hasSavedBracket ? 'Bracket successfully updated.' : 'Bracket payload successfully saved.');
+      const successMessage = isUpdating ? 'Bracket successfully updated.' : 'Bracket payload successfully saved.';
+      setSubmitMessage(successMessage);
+      toast.success(successMessage);
     } catch (error) {
+      const fallbackMessage = isUpdating ? 'Unable to update bracket.' : 'Unable to submit bracket.';
+      const errorMessage = error instanceof Error ? error.message : fallbackMessage;
       setSubmitStatus('error');
-      setSubmitMessage(error instanceof Error ? error.message : 'Unable to submit bracket.');
+      setSubmitMessage(errorMessage);
+      toast.error(fallbackMessage, {
+        description: errorMessage,
+      });
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 import { getUserRooms, createRoom } from '@/src/app/api/api';
 import RoomModal from '@/src/components/rooms/RoomModal'; // Adjust path based on where you save it
 
@@ -51,15 +52,21 @@ export default function RoomsPage() {
 
     const userId = localStorage.getItem('user_id');
     if (!userId) {
-      alert('You must be logged in to create a room.');
+      toast.error('Unable to create room.', {
+        description: 'You must be logged in to create a room.',
+      });
       return;
     }
 
     try {
       await createRoom(roomName, userId);
+      toast.success('Room created successfully.');
       fetchRooms(); 
     } catch (err: any) {
-      alert(`Error creating room: ${err.message}`);
+      const errorMessage = err.message || 'Something went wrong while creating the room.';
+      toast.error('Unable to create room.', {
+        description: errorMessage,
+      });
     }
   };
 
