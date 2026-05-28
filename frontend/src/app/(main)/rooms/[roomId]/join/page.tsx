@@ -16,52 +16,37 @@ export default function JoinRoomPage() {
 
   useEffect(() => {
     const processInvite = async () => {
-      // 🟠 2. Check what the ID is BEFORE the early return
-      console.log('🟠 EFFECT: processInvite triggered. roomId is:', roomId);
+      if (!roomId) return;
 
-      if (!roomId) {
-        console.log('🟡 EXIT: roomId is missing or undefined. Stopping here.');
-        return;
-      }
-
-      // 3. Just check localStorage! No Supabase needed.
       const userId = localStorage.getItem('user_id');
       const token = localStorage.getItem('access_token');
 
-      // 🟢 4. Check credentials safely
-      console.log('🟢 CREDENTIALS:');
-      console.log('   - User ID:', userId);
-      console.log('   - Access Token:', token ? '[EXISTS]' : '[MISSING]');
-
-      // If either is missing, they aren't fully logged in
+      // 🔴 PATH A: Not logged in. Send to root with modal triggers.
       if (!userId || !token) {
-        console.log('🔵 REDIRECT: Missing credentials. Sending to /login.');
         setStatus('Please log in to join. Redirecting...');
-        router.push(`/login?redirectTo=/rooms/${roomId}/join`);
+        router.push(`/?showLogin=true&redirectTo=/rooms/${roomId}/join`);         
         return;
       }
 
-      // 2. Proceed with API logic
+      // 🟢 PATH B: Logged in. Join the room directly.
       setStatus('Joining room...');
       try {
-        console.log('🟣 API: Calling joinRoom...');
         await joinRoom(roomId, userId); 
-        console.log('✅ API: Success!');
-        
         setStatus('Successfully joined! Taking you to the room...');
         setTimeout(() => router.push('/rooms'), 1000);
-
       } catch (error: any) {
-        console.error('❌ API ERROR: Fetch failed!', error);
-        const errorMessage = error.message.toLowerCase();
+        // 1. Log the actual error to the console!
+        console.error("🚨 REAL ERROR FROM BACKEND:", error);
+
+        const errorMessage = error?.message?.toLowerCase() || '';
         
+        // 2. Only say "already in room" if the backend explicitly tells us that
         if (errorMessage.includes('already') || errorMessage.includes('duplicate') || errorMessage.includes('unique constraint')) {
-          console.log('⚠️ API INFO: User is already in the room.');
           setStatus('You are already in this room! Redirecting...');
           setTimeout(() => router.push('/rooms'), 1500);
         } else {
-          console.log('🚨 API INFO: Unhandled error message:', errorMessage);
-          setStatus(`Oops! Failed to join: ${error.message}`);
+          // 3. Otherwise, print the real error on the screen so we can read it
+          setStatus(`Failed to join: ${error.message || 'Unknown server error'}`);
         }
       }
     };
