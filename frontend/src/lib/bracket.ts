@@ -164,3 +164,26 @@ export function buildPredictionPayload(
     },
   };
 }
+
+export function transformDbBracketToState(bracketData: any) {
+  if (!bracketData) return null;
+  
+  const picks = Object.entries(bracketData.group_stage).reduce<AllGroupPicks>(
+    (acc, [groupKey, groupPicks]: [string, any]) => {
+      const groupId = groupKey.replace('Group_', '');
+      acc[groupId] = {
+        1: groupPicks.first,
+        2: groupPicks.second,
+        3: groupPicks.third,
+      };
+      return acc;
+    },
+    {}
+  );
+
+  return {
+    picks,
+    thirdPicks: bracketData.wildcards || [],
+    knockoutPicks: bracketData.knockouts || {},
+  };
+}

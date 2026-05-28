@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+// 🆕 1. Import useSearchParams and your LoginForm
+import { useSearchParams } from 'next/navigation';
+import LoginForm from '@/src/components/LoginForm'; 
+
 import BracketForm from '@/src/components/BracketForm';
 import GroupStageForm from '@/src/components/GroupStageForm';
 import PredictorTabs from '@/src/components/PredictorTabs';
@@ -13,11 +17,23 @@ import { usePredictorStore } from '@/src/store/predictorStore';
 
 export default function PredictorPage() {
   const { activeTab, picks, reset, loadBracketData, allGroupsComplete } = usePredictorStore();
+  
+  // 🆕 2. Add state and searchParams for the modal
+  const searchParams = useSearchParams();
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
   const [groupScoreResult, setGroupScoreResult] = useState<{
     key: string;
     score: number | null;
     status: 'idle' | 'error';
   } | null>(null);
+
+  // 🆕 3. Add the URL Watcher effect
+  useEffect(() => {
+    if (searchParams.get('showLogin') === 'true') {
+      setIsLoginModalOpen(true);
+    }
+  }, [searchParams]);
 
   const groupScorePayload = useMemo(() => {
     if (activeTab !== 'groups') return null;
@@ -94,41 +110,56 @@ export default function PredictorPage() {
     : 'idle';
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-5">
-      
-      {/* Header Section */}
-      <div className="flex flex-wrap items-start justify-between gap-4">        
-        <div className="mt-1">
-          <button
-            onClick={reset}
-            className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            Reset all
-          </button>
+    <>
+      <div className="max-w-6xl mx-auto px-6 py-8 space-y-5 relative">
+        
+        {/* Header Section */}
+        <div className="flex flex-wrap items-start justify-between gap-4">        
+          <div className="mt-1">
+            <button
+              onClick={reset}
+              className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Reset all
+            </button>
+          </div>
+
+          {activeTab === 'groups' && (
+            <div className="min-w-40 rounded-lg border border-gray-200 bg-white px-4 py-3 text-right shadow-sm">
+              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Group stage score</p>
+              <p className="mt-1 text-2xl font-semibold text-gray-900">
+                {scoreStatus === 'loading' ? '...' : groupScore ?? '-'}
+              </p>
+              <p className="text-xs text-gray-400">
+                {scoreStatus === 'error'
+                  ? 'Unable to score'
+                  : groupScore === null
+                    ? 'Complete all groups'
+                    : 'Lower is better'}
+              </p>
+            </div>
+          )}
         </div>
 
-        {activeTab === 'groups' && (
-          <div className="min-w-40 rounded-lg border border-gray-200 bg-white px-4 py-3 text-right shadow-sm">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Group stage score</p>
-            <p className="mt-1 text-2xl font-semibold text-gray-900">
-              {scoreStatus === 'loading' ? '...' : groupScore ?? '-'}
-            </p>
-            <p className="text-xs text-gray-400">
-              {scoreStatus === 'error'
-                ? 'Unable to score'
-                : groupScore === null
-                  ? 'Complete all groups'
-                  : 'Lower is better'}
-            </p>
-          </div>
-        )}
+        <PredictorTabs />
+
+        {activeTab === 'groups' && <GroupStageForm />}
+        {activeTab === 'third' && <ThirdPlaceForm />}
+        {activeTab === 'bracket' && <BracketForm />}
       </div>
 
-      <PredictorTabs />
-
-      {activeTab === 'groups' && <GroupStageForm />}
-      {activeTab === 'third' && <ThirdPlaceForm />}
-      {activeTab === 'bracket' && <BracketForm />}
-    </div>
+      {/* 🆕 4. Render the Modal overlay at the very bottom */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <LoginForm 
+            onSuccess={() => {
+              setIsLoginModalOpen(false);
+              // Your LoginForm's internal logic will handle the router.push(redirectTo) automatically!
+            }} 
+            onCancel={() => setIsLoginModalOpen(false)} 
+          />
+        </div>
+      )}
+    </>
   );
 }

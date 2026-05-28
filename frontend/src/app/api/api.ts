@@ -62,54 +62,87 @@ export const logoutUser = () => {
   window.location.reload();
 };
 
-//============================================= GAME LOGIC ============================================
+//=========================================== AUTH WRAPPER ===========================================
 
-export const submitBracketPayload = async (
-  payload: CreatePredictionRequest,
-): Promise<void> => {
-  const token = localStorage.getItem("access_token");
+export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  let token = localStorage.getItem('access_token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
 
-  if (!token) {
-    throw new Error("Please log in before submitting your bracket.");
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}/store`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
+  let response = await fetch(url, { ...options, headers });
 
-  if (!response.ok) {
-    throw new Error(`Store request failed with ${response.status}`);
+  const clonedResponse = response.clone();
+  const responseText = await clonedResponse.text();
+
+  if (response.status === 401 || responseText.includes('PGRST303') || responseText.includes('JWT expired')) {
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (refreshToken) {
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json();
+          
+          // Save the fresh tokens
+          localStorage.setItem('access_token', refreshData.access_token);
+          if (refreshData.refresh_token) {
+            localStorage.setItem('refresh_token', refreshData.refresh_token);
+          }
+
+          headers['Authorization'] = `Bearer ${refreshData.access_token}`;
+          response = await fetch(url, { ...options, headers });
+          
+        } else {
+          logoutUser();
+          throw new Error('Session expired. Please log in again.');
+        }
+      } catch (error) {
+        logoutUser();
+        throw new Error('Session expired. Please log in again.');
+      }
+    } else {
+      logoutUser();
+      throw new Error('Session expired. Please log in again.');
+    }
   }
+
+  return response;
 };
 
-export const updateBracketPayload = async (
-  payload: CreatePredictionRequest,
-): Promise<void> => {
-  const token = localStorage.getItem("access_token");
+//============================================= GAME LOGIC ============================================
 
-  if (!token) {
-    throw new Error("Please log in before updating your bracket.");
-  }
-
-  const response = await fetch(`${API_BASE_URL}/update`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+export const submitBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/store`, {
+    method: 'POST',
     body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
     const data = await response.json();
-    throw new Error(
-      data.detail || `Update request failed with ${response.status}`,
-    );
+    throw new Error(data.detail || `Store request failed with ${response.status}`);
+  }
+};
+
+export const updateBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/update`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || `Update request failed with ${response.status}`);
   }
 };
 
@@ -117,29 +150,19 @@ export interface RetrieveBracketResponse {
   bracket_data: BracketDataPayload | null;
 }
 
-export const retrieveBracketPayload =
-  async (): Promise<RetrieveBracketResponse> => {
-    const token = localStorage.getItem("access_token");
+export const retrieveBracketPayload = async (): Promise<RetrieveBracketResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/retrieve`, {
+    method: 'GET',
+  });
 
-    if (!token) {
-      throw new Error("Please log in before loading your bracket.");
-    }
+  const data = await response.json();
 
-    const response = await fetch(`${API_BASE_URL}/retrieve`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to load bracket");
+  }
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.detail || "Failed to load bracket");
-    }
-
-    return data;
-  };
+  return data;
+};
 
 export interface ScoreGroupStageResponse {
   valid: boolean;
@@ -173,11 +196,8 @@ export const scoreGroupStagePayload = async (
 //=============================================== ROOMS ==============================================
 
 export const createRoom = async (name: string, userId: string) => {
-  const response = await fetch(`${API_BASE_URL}/rooms/`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const response = await fetchWithAuth(`${API_BASE_URL}/rooms/`, {
+    method: 'POST',
     body: JSON.stringify({ name, user_id: userId }),
   });
 
@@ -191,11 +211,8 @@ export const createRoom = async (name: string, userId: string) => {
 };
 
 export const joinRoom = async (roomId: string, userId: string) => {
-  const response = await fetch(`${API_BASE_URL}/rooms/${roomId}/join`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const response = await fetchWithAuth(`${API_BASE_URL}/rooms/${roomId}/join`, {
+    method: 'POST',
     body: JSON.stringify({ user_id: userId }),
   });
 
@@ -209,11 +226,8 @@ export const joinRoom = async (roomId: string, userId: string) => {
 };
 
 export const getUserRooms = async (userId: string) => {
-  const response = await fetch(`${API_BASE_URL}/rooms/?user_id=${userId}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
+  const response = await fetchWithAuth(`${API_BASE_URL}/rooms/?user_id=${userId}`, {
+    method: 'GET',
   });
 
   const data = await response.json();
@@ -223,4 +237,17 @@ export const getUserRooms = async (userId: string) => {
   }
 
   return data;
+};
+
+export const getRoomMembers = async (roomId: string) => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/rooms/${roomId}/members`, {
+    method: 'GET',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.detail || 'Failed to fetch room members');
+  }
+
+  return response.json();
 };

@@ -2,13 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+// 1. Import useSearchParams
+import { useSearchParams } from 'next/navigation'; 
 import { Trophy, Users, LogIn, LogOut } from 'lucide-react';
-import {logoutUser} from '@/src/app/api/api';
+import { logoutUser } from '@/src/app/api/api';
 import { cn } from '@/src/utils/merge';
-
 
 export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
   const [username, setUsername] = useState<string | null>(null);
+  // 2. Initialize searchParams
+  const searchParams = useSearchParams(); 
 
   useEffect(() => {
     setUsername(localStorage.getItem('username'));
@@ -20,6 +23,14 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
     window.addEventListener('auth-change', handleAuthChange);
     return () => window.removeEventListener('auth-change', handleAuthChange);
   }, []);
+
+  // 3. Add this new useEffect right here!
+  useEffect(() => {
+    // If the URL has ?showLogin=true AND the user isn't already logged in...
+    if (searchParams.get('showLogin') === 'true' && !username) {
+      onLoginClick(); // Automatically pop the modal open!
+    }
+  }, [searchParams, username, onLoginClick]);
 
   const handleLogout = () => {
     logoutUser();
