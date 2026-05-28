@@ -39,17 +39,32 @@ function TeamButton({
       onClick={onClick}
       className={cn(
         'flex h-7 w-full items-center justify-between px-2 text-left text-xs transition-all',
-        selected
-          ? 'bg-teal-50 text-teal-700'
-          : 'bg-white text-gray-700 hover:bg-gray-50',
-        (disabled || !team) && 'cursor-not-allowed bg-gray-50 text-gray-300 hover:bg-gray-50',
+        // 1. Selected state: ALWAYS teal, even if read-only/disabled
+        selected ? 'bg-teal-50 text-teal-700 font-medium' : 'bg-white text-gray-700',
+        
+        // 2. Interactive state: allow hover ONLY if it's not disabled and not selected
+        !disabled && !selected && 'hover:bg-gray-50',
+        
+        // 3. Disabled & Unselected state: gray it out so the teal really pops
+        (disabled || !team) && !selected && 'bg-gray-50 text-gray-400',
+        
+        // 4. Cursor logic: default arrow if selected, not-allowed if blank/disabled
+        (disabled || !team) ? (selected ? 'cursor-default' : 'cursor-not-allowed') : 'cursor-pointer'
       )}
     >
       <span className="flex min-w-0 items-center gap-1.5">
-        <span className={cn('text-base leading-none', !team && 'opacity-30')}>{team?.flag ?? '-'}</span>
+        <span className={cn(
+          'text-base leading-none', 
+          // Dim the flag if it's empty, or if it's an unselected team in read-only mode
+          (!team || (disabled && !selected)) && 'opacity-50'
+        )}>
+          {team?.flag ?? '-'}
+        </span>
         <span className="truncate">{team?.name ?? 'Awaiting winner'}</span>
       </span>
-      <span className="ml-2 flex-shrink-0 text-[10px] font-semibold text-gray-400">{team?.seedLabel}</span>
+      <span className="ml-2 flex-shrink-0 text-[10px] font-semibold text-gray-400 opacity-70">
+        {team?.seedLabel}
+      </span>
     </button>
   );
 }
@@ -207,7 +222,7 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
         </div>
       )}
 
-      <div className="overflow-x-auto -mx-6 px-6 pb-4">
+      <div className={cn("overflow-x-auto pb-4", !isReadOnly && "-mx-6 px-6")}>
         <div
           className="relative"
           style={{

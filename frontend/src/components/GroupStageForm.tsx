@@ -52,7 +52,7 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
       )}
 
       {/* 4-column grid — horizontal scroll on mobile */}
-      <div className="overflow-x-auto -mx-6 px-6 pb-2">
+      <div className={cn("overflow-x-auto pb-2", !isReadOnly && "-mx-6 px-6")}>
         <div className="grid grid-cols-4 gap-3 min-w-[900px] md:min-w-0">
           {GROUPS.map((group) => {
             const gp = activePicks[group.id] ?? {};

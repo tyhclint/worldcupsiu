@@ -3,10 +3,10 @@ import { X, Copy, Check, Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { RoomModalProps } from '@/src/interfaces/Room';
 import { getRoomMembers } from '@/src/app/api/api';
 
-// 🆕 Import your forms and adapter
 import GroupStageForm from '@/src/components/GroupStageForm';
 import BracketForm from '@/src/components/BracketForm';
 import { transformDbBracketToState } from '@/src/lib/bracket';
+import { getTeamById } from '@/src/lib/db';
 
 export default function RoomModal({ room, onClose }: RoomModalProps) {
   const [copied, setCopied] = useState(false);
@@ -48,11 +48,23 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
   };
 
   const getPredictedWinner = (bracketData: any) => {
+    // 1. If they haven't saved a bracket at all
     if (!bracketData) return { name: "No bracket yet", flag: "⏱️" };
-    // Adjust based on your actual db payload if needed
-    const winnerName = bracketData?.knockouts?.M104 ? "Predicted" : "TBC"; 
-    const winnerFlag = bracketData?.knockouts?.M104 ? "🏆" : "❓";
-    return { name: winnerName, flag: winnerFlag };
+    
+    // 2. Grab the ID of the team they picked to win the final (Match 104)
+    const championId = bracketData?.knockouts?.M104;
+    
+    if (championId) {
+      // 3. Look up the real team data!
+      const championTeam = getTeamById(championId);
+      
+      return { 
+        name: championTeam ? "Predicted:  " + championTeam.name : "Predicted", 
+        flag: championTeam ? championTeam.flag : "🏆" 
+      };
+    }
+
+    return { name: "TBC", flag: "❓" };
   };
 
   // 🆕 The Helper to render the forms
@@ -88,7 +100,7 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
         </div>
 
         {/* The scrolling container for the forms */}
-        <div className="overflow-y-auto pr-2 flex-grow space-y-12 pb-12">
+        <div className="overflow-y-auto overflow-x-hidden pr-2 flex-grow space-y-12 pb-12">
            <div>
              <h4 className="text-lg font-bold mb-4 text-gray-800">Group Stage Picks</h4>
              <GroupStageForm readOnlyData={formattedData} />
