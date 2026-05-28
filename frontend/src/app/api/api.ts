@@ -5,6 +5,65 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+//=========================================== AUTH WRAPPER ===========================================
+// call all api end points with this wrapper to handle token refresh
+
+export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  let token = localStorage.getItem('access_token');
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  let response = await fetch(url, { ...options, headers });
+
+  const clonedResponse = response.clone();
+  const responseText = await clonedResponse.text();
+
+  if (response.status === 401 || responseText.includes('PGRST303') || responseText.includes('JWT expired')) {
+    const refreshToken = localStorage.getItem('refresh_token');
+
+    if (refreshToken) {
+      try {
+        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        if (refreshResponse.ok) {
+          const refreshData = await refreshResponse.json();
+          
+          // Save the fresh tokens
+          localStorage.setItem('access_token', refreshData.access_token);
+          if (refreshData.refresh_token) {
+            localStorage.setItem('refresh_token', refreshData.refresh_token);
+          }
+
+          headers['Authorization'] = `Bearer ${refreshData.access_token}`;
+          response = await fetch(url, { ...options, headers });
+          
+        } else {
+          logoutUser();
+          throw new Error('Session expired. Please log in again.');
+        }
+      } catch (error) {
+        logoutUser();
+        throw new Error('Session expired. Please log in again.');
+      }
+    } else {
+      logoutUser();
+      throw new Error('Session expired. Please log in again.');
+    }
+  }
+
+  return response;
+};
+
 //================================================ AUTH ============================================
 
 export interface LoginResponse {
@@ -62,63 +121,7 @@ export const logoutUser = () => {
   window.location.reload();
 };
 
-//=========================================== AUTH WRAPPER ===========================================
 
-export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  let token = localStorage.getItem('access_token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  let response = await fetch(url, { ...options, headers });
-
-  const clonedResponse = response.clone();
-  const responseText = await clonedResponse.text();
-
-  if (response.status === 401 || responseText.includes('PGRST303') || responseText.includes('JWT expired')) {
-    const refreshToken = localStorage.getItem('refresh_token');
-
-    if (refreshToken) {
-      try {
-        const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        });
-
-        if (refreshResponse.ok) {
-          const refreshData = await refreshResponse.json();
-          
-          // Save the fresh tokens
-          localStorage.setItem('access_token', refreshData.access_token);
-          if (refreshData.refresh_token) {
-            localStorage.setItem('refresh_token', refreshData.refresh_token);
-          }
-
-          headers['Authorization'] = `Bearer ${refreshData.access_token}`;
-          response = await fetch(url, { ...options, headers });
-          
-        } else {
-          logoutUser();
-          throw new Error('Session expired. Please log in again.');
-        }
-      } catch (error) {
-        logoutUser();
-        throw new Error('Session expired. Please log in again.');
-      }
-    } else {
-      logoutUser();
-      throw new Error('Session expired. Please log in again.');
-    }
-  }
-
-  return response;
-};
 
 //============================================= GAME LOGIC ============================================
 

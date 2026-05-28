@@ -49,3 +49,10 @@ def get_access_token(authorization: str) -> str:
         raise HTTPException(status_code=401, detail="Invalid auth token")
 
     return token
+
+def refresh_user_session(refresh_token: str):
+    """
+    Trades a valid refresh token for a brand new access token and refresh token pair.
+    """
+    response = supabase.auth.refresh_session(refresh_token)
+    return response
