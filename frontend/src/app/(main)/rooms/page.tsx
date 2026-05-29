@@ -133,8 +133,6 @@ export default function RoomsPage() {
                 </h2>
 
                 <div className="flex flex-col gap-1 text-sm font-medium text-gray-500">
-                  <span className="italic text-xs">Leaderboard data coming soon...</span>
-                  <span className="tracking-[0.2em] font-bold">....</span>
                 </div>
               </div>
             ))}

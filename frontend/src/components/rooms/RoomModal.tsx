@@ -100,7 +100,7 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
         </div>
 
         {/* The scrolling container for the forms */}
-        <div className="overflow-y-auto overflow-x-hidden pr-2 flex-grow space-y-12 pb-12">
+        <div className="overflow-y-auto overflow-x-auto pr-2 flex-grow space-y-12 pb-12">
            <div>
              <h4 className="text-lg font-bold mb-4 text-gray-800">Group Stage Picks</h4>
              <GroupStageForm readOnlyData={formattedData} />
@@ -127,7 +127,7 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
         Otherwise, stay at max-w-2xl for the leaderboard. 
       */}
       <div className={`relative bg-white w-full rounded-2xl shadow-2xl p-6 md:p-8 z-10 flex flex-col transition-all duration-300 ${
-        selectedUser ? 'max-w-6xl h-[90vh]' : 'max-w-2xl'
+        selectedUser ? 'max-w-7xl h-[90vh]' : 'max-w-2xl'
       }`}>
         
         {/* 🆕 THE TOGGLE: Are we viewing the list, or a specific user? */}
