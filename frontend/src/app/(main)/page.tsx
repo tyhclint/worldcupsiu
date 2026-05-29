@@ -21,6 +21,7 @@ export default function PredictorPage() {
   // 🆕 2. Add state and searchParams for the modal
   const searchParams = useSearchParams();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
 
   const [groupScoreResult, setGroupScoreResult] = useState<{
     key: string;
@@ -115,28 +116,51 @@ export default function PredictorPage() {
         
         {/* Header Section */}
         <div className="flex flex-wrap items-start justify-between gap-4">        
-          <div className="mt-1">
-            <button
-              onClick={reset}
-              className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              Reset all
-            </button>
+          <div className="mt-1 min-h-[24px] flex items-center">
+            {isConfirmingReset ? (
+              <div className="flex items-center gap-2 animate-in fade-in duration-200">
+                <span className="text-xs font-medium text-gray-500">Are you sure?</span>
+                <button
+                  onClick={() => {
+                    reset();
+                    setIsConfirmingReset(false); // Reset the state after clearing
+                  }}
+                  className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors"
+                >
+                  Yes, reset
+                </button>
+                <span className="text-gray-300 text-xs">|</span>
+                <button
+                  onClick={() => setIsConfirmingReset(false)}
+                  className="text-xs font-medium text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsConfirmingReset(true)}
+                className="bg-gray-100 text-xs font-medium text-gray-500 hover:text-white hover:bg-red-500 transition-colors py-2 px-4 rounded-full"
+              >
+                Reset all
+              </button>
+            )}
           </div>
 
           {activeTab === 'groups' && (
             <div className="min-w-40 rounded-lg border border-gray-200 bg-white px-4 py-3 text-right shadow-sm">
               <p className="text-xs font-medium uppercase tracking-wide text-gray-400">Group stage score</p>
               <p className="mt-1 text-2xl font-semibold text-gray-900">
-                {scoreStatus === 'loading' ? '...' : groupScore ?? '-'}
+                -
+                {/* {scoreStatus === 'loading' ? '...' : groupScore ?? '-'}  DISABLED UNTIL WC BEGINS*/} 
               </p>
-              <p className="text-xs text-gray-400">
+              {/* <p className="text-xs text-gray-400">
                 {scoreStatus === 'error'
                   ? 'Unable to score'
                   : groupScore === null
                     ? 'Complete all groups'
                     : 'Lower is better'}
-              </p>
+              </p> */}
             </div>
           )}
         </div>

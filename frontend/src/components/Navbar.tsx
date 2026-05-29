@@ -57,7 +57,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
           <nav className="flex items-center gap-6">
             <Link 
               href="/" 
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
             >
               Current Bracket
             </Link>
@@ -65,7 +65,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
             {isAuthenticated && (
               <Link 
                 href="/rooms" 
-                className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
               >
                 <Users className="h-4 w-4" />
                 My Rooms
