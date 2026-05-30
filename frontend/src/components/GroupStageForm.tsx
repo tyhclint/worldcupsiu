@@ -3,6 +3,7 @@
 import { GROUPS } from '@/src/lib/db';
 import { usePredictorStore } from '@/src/store/predictorStore';
 import { cn } from '@/src/utils/merge';
+import FlagIcon from '@/src/components/FlagIcon';
 
 // Red / Orange / Teal — rank 1 / 2 / 3
 const RANK_STYLES = {
@@ -94,7 +95,8 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
                             RANK_STYLES[rank].badge
                           )}
                         >
-                          {team.flag} {team.name}
+                          <FlagIcon teamId={team.id} label={team.name} className="mr-1" />
+                          {team.name}
                         </span>
                       );
                     })}
@@ -125,14 +127,14 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
 
                       <div className="flex items-center justify-between flex-1 px-2 py-2">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span
+                          <FlagIcon
+                            teamId={team.id}
+                            label={team.name}
                             className={cn(
-                              'text-base leading-none flex-shrink-0 transition-all duration-300',
+                              'text-base flex-shrink-0 transition-all duration-300',
                               eliminated && 'grayscale'
                             )}
-                          >
-                            {team.flag}
-                          </span>
+                          />
                           <span
                             className={cn(
                               'text-xs truncate transition-all duration-300',
