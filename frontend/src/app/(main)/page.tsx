@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 // 🆕 1. Import useSearchParams and your LoginForm
 import { useSearchParams } from 'next/navigation';
 import LoginForm from '@/src/components/LoginForm'; 
@@ -16,6 +16,14 @@ import type { BracketDataPayload, GroupId } from '@/src/lib/types';
 import { usePredictorStore } from '@/src/store/predictorStore';
 
 export default function PredictorPage() {
+  return (
+    <Suspense fallback={null}>
+      <PredictorPageContent />
+    </Suspense>
+  );
+}
+
+function PredictorPageContent() {
   const { activeTab, picks, reset, loadBracketData, allGroupsComplete } = usePredictorStore();
   
   // 🆕 2. Add state and searchParams for the modal

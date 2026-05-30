@@ -41,7 +41,7 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
   if (!room) return null;
 
   const handleInviteClick = () => {
-    const inviteLink = `${window.location.origin}/rooms/${room.id}/join`;
+    const inviteLink = `${window.location.origin}/rooms/join?roomId=${encodeURIComponent(room.id)}`;
     navigator.clipboard.writeText(inviteLink).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
