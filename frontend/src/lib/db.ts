@@ -18,7 +18,7 @@ export const GROUPS: Group[] = [
       { id: 'canada', name: 'Canada', flag: '🇨🇦' },
       { id: 'switzerland', name: 'Switzerland', flag: '🇨🇭' },
       { id: 'qatar', name: 'Qatar', flag: '🇶🇦' },
-      { id: 'bosnia', name: 'Bosnia & Herzegovina', flag: '🇧🇦' },
+      { id: 'bosnia', name: 'Bosnia-Herzegovina', flag: '🇧🇦' },
     ],
   },
   {

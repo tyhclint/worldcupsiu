@@ -1,17 +1,30 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import localFont from 'next/font/local';
 import { Toaster } from "sonner";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+
+const vcrMono = localFont({
+  src: '../assets/fonts/VCR_OSD_MONO_1.001.ttf', // Check your exact filename inside the folder
+  variable: '--font-vcr', // The CSS variable Tailwind will use
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const lemonMilk = localFont({
+  src: [
+
+    {
+      path: '../assets/fonts/lemon_milk/LEMONMILK-Light.otf',
+      weight: '300',
+      style: 'normal',
+
+    }
+  ],
+  variable: '--font-lemon', // The CSS variable Tailwind will use
+  display: 'swap',
 });
+
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -26,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${lemonMilk.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}
