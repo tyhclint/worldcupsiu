@@ -2,6 +2,7 @@
 
 import { usePredictorStore } from '@/src/store/predictorStore';
 import { cn } from '@/src/utils/merge';
+import FlagIcon from '@/src/components/FlagIcon';
 
 export default function ThirdPlaceForm() {
   const {
@@ -42,7 +43,7 @@ export default function ThirdPlaceForm() {
               )}
             >
               <span className="flex min-w-0 items-center gap-2">
-                <span className="text-lg leading-none">{team.flag}</span>
+                <FlagIcon teamId={team.id} label={team.name} className="text-lg" />
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{team.name}</span>
                   <span className="block text-xs text-gray-400">Group {team.groupId} third place</span>

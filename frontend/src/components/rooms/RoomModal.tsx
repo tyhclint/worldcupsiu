@@ -5,6 +5,7 @@ import { getRoomMembers } from '@/src/app/api/api';
 
 import GroupStageForm from '@/src/components/GroupStageForm';
 import BracketForm from '@/src/components/BracketForm';
+import FlagIcon from '@/src/components/FlagIcon';
 import { transformDbBracketToState } from '@/src/lib/bracket';
 import { getTeamById } from '@/src/lib/db';
 
@@ -40,7 +41,7 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
   if (!room) return null;
 
   const handleInviteClick = () => {
-    const inviteLink = `${window.location.origin}/rooms/${room.id}/join`;
+    const inviteLink = `${window.location.origin}/rooms/join?roomId=${encodeURIComponent(room.id)}`;
     navigator.clipboard.writeText(inviteLink).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -60,7 +61,8 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
       
       return { 
         name: championTeam ? "Predicted:  " + championTeam.name : "Predicted", 
-        flag: championTeam ? championTeam.flag : "🏆" 
+        flag: championTeam ? championTeam.flag : "🏆",
+        teamId: championTeam?.id,
       };
     }
 
@@ -195,7 +197,11 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
                         <div className="flex items-center gap-4 md:gap-6">
                           <span className="text-gray-600 flex items-center gap-2 text-sm md:text-base">
                             <span className="hidden md:inline">{winner.name}</span> 
-                            <span className="text-xl">{winner.flag}</span>
+                            {winner.teamId ? (
+                              <FlagIcon teamId={winner.teamId} label={winner.name} className="text-xl" />
+                            ) : (
+                              <span className="text-xl">{winner.flag}</span>
+                            )}
                           </span>
                           <span className="font-mono bg-white border border-gray-200 text-gray-700 px-3 py-1 rounded-md text-sm font-bold shadow-sm">
                             {user.score} pts

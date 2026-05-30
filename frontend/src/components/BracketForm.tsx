@@ -8,6 +8,7 @@ import { ROUND_LABELS, ROUND_ORDER } from '@/src/lib/bracketConfig';
 import { usePredictorStore } from '@/src/store/predictorStore';
 import { cn } from '@/src/utils/merge';
 import { submitBracketPayload, updateBracketPayload } from '@/src/app/api/api';
+import FlagIcon from '@/src/components/FlagIcon';
 
 const MATCH_HEIGHT = 86;
 const BASE_GAP = 16;
@@ -54,13 +55,19 @@ function TeamButton({
       )}
     >
       <span className="flex min-w-0 items-center gap-1.5">
-        <span className={cn(
-          'text-base leading-none', 
-          // Dim the flag if it's empty, or if it's an unselected team in read-only mode
-          (!team || (disabled && !selected)) && 'opacity-50'
-        )}>
-          {team?.flag ?? '-'}
-        </span>
+        {team ? (
+          <FlagIcon
+            teamId={team.id}
+            label={team.name}
+            className={cn(
+              'text-base',
+              // Dim the flag if it's empty, or if it's an unselected team in read-only mode
+              disabled && !selected && 'opacity-50'
+            )}
+          />
+        ) : (
+          <span className="text-base leading-none opacity-50">-</span>
+        )}
         <span className="truncate">{team?.name ?? 'Awaiting winner'}</span>
       </span>
       <span className="ml-2 flex-shrink-0 text-[10px] font-semibold text-gray-400 opacity-70">
@@ -227,7 +234,10 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
       {championTeam && (
         <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <Trophy className="h-4 w-4 flex-shrink-0" />
-          <span className="font-semibold">{championTeam.flag} {championTeam.name}</span>
+          <span className="inline-flex items-center gap-1.5 font-semibold">
+            <FlagIcon teamId={championTeam.id} label={championTeam.name} />
+            {championTeam.name}
+          </span>
           <span>selected as champion</span>
         </div>
       )}
