@@ -99,6 +99,7 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
       <span className="text-[10px] uppercase text-white/70">
         {fantasyPositionLabel[player.position]}
       </span>
+      <span className="text-[10px] uppercase text-white/60">{player.country_code}</span>
     </div>
   );
 

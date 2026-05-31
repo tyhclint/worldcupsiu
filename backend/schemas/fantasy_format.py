@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 PlayerPosition = Literal["Goalkeeper", "Defender", "Midfielder", "Attacker"]
@@ -79,6 +79,23 @@ class FantasySquadSchema(BaseModel):
     formation: FantasyFormation
     starters: dict[str, FantasySelectedPlayer]
     bench: dict[str, FantasySelectedPlayer]
+
+    @model_validator(mode="after")
+    def enforce_squad_limits(self) -> "FantasySquadSchema":
+        players = list(self.starters.values()) + list(self.bench.values())
+
+        player_ids = [player.id for player in players]
+        if len(player_ids) != len(set(player_ids)):
+            raise ValueError("Duplicate players are not allowed")
+
+        team_counts: dict[int, int] = {}
+        for player in players:
+            team_counts[player.team_id] = team_counts.get(player.team_id, 0) + 1
+
+        if any(count > 2 for count in team_counts.values()):
+            raise ValueError("A squad can include at most 2 players from the same team")
+
+        return self
 
 
 class SaveFantasySquadRequest(BaseModel):
