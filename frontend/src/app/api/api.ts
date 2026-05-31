@@ -9,7 +9,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 // call all api end points with this wrapper to handle token refresh
 
 export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  let token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -51,7 +51,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
           logoutUser();
           throw new Error('Session expired. Please log in again.');
         }
-      } catch (error) {
+      } catch {
         logoutUser();
         throw new Error('Session expired. Please log in again.');
       }
@@ -191,6 +191,37 @@ export const scoreGroupStagePayload = async (
     throw new Error(
       data.detail || `Score request failed with ${response.status}`,
     );
+  }
+
+  return data;
+};
+
+//============================================== FANTASY =============================================
+
+export type FantasyPlayer = {
+  id: number;
+  name: string;
+  age: number | null;
+  number: number | null;
+  position: 'Goalkeeper' | 'Defender' | 'Midfielder' | 'Attacker';
+  photo: string;
+};
+
+export type FantasySquad = {
+  team: {
+    id: number;
+    name: string;
+    logo: string;
+  };
+  players: FantasyPlayer[];
+};
+
+export const getFantasySquad = async (countryCode: string): Promise<FantasySquad> => {
+  const response = await fetch(`${API_BASE_URL}/fantasy/squads/${countryCode}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to fetch squad');
   }
 
   return data;
