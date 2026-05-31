@@ -17,39 +17,59 @@ const midfielderOptions = [2, 3, 4, 5];
 const forwardOptions = [1, 2, 3];
 
 const countries = [
+  { code: 'ALG', name: 'Algeria' },
   { code: 'ARG', name: 'Argentina' },
   { code: 'AUS', name: 'Australia' },
+  { code: 'AUT', name: 'Austria' },
   { code: 'BEL', name: 'Belgium' },
+  { code: 'BOS', name: 'Bosnia & Herzegovina' },
   { code: 'BRA', name: 'Brazil' },
-  { code: 'CAM', name: 'Cameroon' },
   { code: 'CAN', name: 'Canada' },
-  { code: 'COS', name: 'Costa Rica' },
+  { code: 'CAP', name: 'Cape Verde' },
+  { code: 'COL', name: 'Colombia' },
+  { code: 'CON', name: 'Congo DR' },
   { code: 'CRO', name: 'Croatia' },
-  { code: 'DEN', name: 'Denmark' },
+  { code: 'CUR', name: 'Curacao' },
+  { code: 'CZE', name: 'Czech Republic' },
   { code: 'ECU', name: 'Ecuador' },
+  { code: 'EGY', name: 'Egypt' },
   { code: 'ENG', name: 'England' },
   { code: 'FRA', name: 'France' },
   { code: 'GER', name: 'Germany' },
   { code: 'GHA', name: 'Ghana' },
+  { code: 'HAI', name: 'Haiti' },
   { code: 'IRA', name: 'Iran' },
+  { code: 'IRQ', name: 'Iraq' },
+  { code: 'IVO', name: 'Ivory Coast' },
   { code: 'JAP', name: 'Japan' },
+  { code: 'JOR', name: 'Jordan' },
   { code: 'KOR', name: 'South Korea' },
   { code: 'MEX', name: 'Mexico' },
   { code: 'MOR', name: 'Morocco' },
   { code: 'NET', name: 'Netherlands' },
-  { code: 'POL', name: 'Poland' },
+  { code: 'NOR', name: 'Norway' },
+  { code: 'NZL', name: 'New Zealand' },
+  { code: 'PAN', name: 'Panama' },
+  { code: 'PAR', name: 'Paraguay' },
   { code: 'POR', name: 'Portugal' },
   { code: 'QAT', name: 'Qatar' },
   { code: 'SAU', name: 'Saudi Arabia' },
+  { code: 'SCO', name: 'Scotland' },
   { code: 'SEN', name: 'Senegal' },
-  { code: 'SER', name: 'Serbia' },
+  { code: 'SOU', name: 'South Africa' },
   { code: 'SPA', name: 'Spain' },
+  { code: 'SWE', name: 'Sweden' },
   { code: 'SWI', name: 'Switzerland' },
   { code: 'TUN', name: 'Tunisia' },
+  { code: 'TUR', name: 'Turkiye' },
   { code: 'URU', name: 'Uruguay' },
   { code: 'USA', name: 'USA' },
-  { code: 'WAL', name: 'Wales' },
+  { code: 'UZB', name: 'Uzbekistan' },
 ];
+
+const countryNameByCode = Object.fromEntries(
+  countries.map((country) => [country.code, country.name]),
+);
 
 const positionBySlot = {
   GKP: 'Goalkeeper',
@@ -113,6 +133,7 @@ function SquadSlot({
           />
           <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
           <span className="text-[10px] uppercase text-white/70">{label}</span>
+          <span className="text-[10px] uppercase text-white/60">{player.country_code}</span>
         </>
       ) : (
         <>
@@ -196,6 +217,7 @@ export default function FantasyPage() {
 
   const handlePlayerPick = (player: FantasyPlayer) => {
     if (!activeSlot || !selectedCountry || !squad) return;
+    if (getPlayerUnavailableReason(player)) return;
 
     setSelectedPlayers({
       ...selectedPlayers,
@@ -210,6 +232,26 @@ export default function FantasyPage() {
     setSelectedCountry(null);
     setSquad(null);
     setError(null);
+  };
+
+  const selectedPlayersOutsideActiveSlot = Object.entries(selectedPlayers)
+    .filter(([slotId]) => slotId !== activeSlot?.id)
+    .map(([, player]) => player);
+
+  const getPlayerUnavailableReason = (player: FantasyPlayer) => {
+    if (!squad) return null;
+
+    const alreadySelected = selectedPlayersOutsideActiveSlot.some(
+      (selectedPlayer) => selectedPlayer.id === player.id,
+    );
+    if (alreadySelected) return 'Already selected';
+
+    const teamCount = selectedPlayersOutsideActiveSlot.filter(
+      (selectedPlayer) => selectedPlayer.team_id === squad.team.id,
+    ).length;
+    if (teamCount >= 2) return 'Max 2 players from this team';
+
+    return null;
   };
 
   const submitSquad = async () => {
@@ -454,28 +496,39 @@ export default function FantasyPage() {
 
                 {!isLoading && !error && (
                   <div className="grid max-h-96 gap-2 overflow-y-auto">
-                    {eligiblePlayers.map((player) => (
-                      <button
-                        key={player.id}
-                        onClick={() => handlePlayerPick(player)}
-                        className="flex items-center justify-between rounded-md border border-gray-200 p-3 text-left hover:bg-gray-50"
-                      >
-                        <div className="flex items-center gap-3">
-                          <img
-                            src={player.photo}
-                            alt={player.name}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
-                          <div>
-                            <p className="text-sm font-bold text-gray-900">{player.name}</p>
-                            <p className="text-xs text-gray-500">{player.position}</p>
+                    {eligiblePlayers.map((player) => {
+                      const unavailableReason = getPlayerUnavailableReason(player);
+
+                      return (
+                        <button
+                          key={player.id}
+                          disabled={!!unavailableReason}
+                          onClick={() => handlePlayerPick(player)}
+                          className="flex items-center justify-between rounded-md border border-gray-200 p-3 text-left hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={player.photo}
+                              alt={player.name}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">{player.name}</p>
+                              <p className="text-xs text-gray-500">{player.position}</p>
+                              <p className="text-xs text-gray-400">
+                                {selectedCountry ? countryNameByCode[selectedCountry] ?? selectedCountry : ''}
+                              </p>
+                              {unavailableReason && (
+                                <p className="text-xs text-red-500">{unavailableReason}</p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <span className="text-xs font-semibold text-gray-400">
-                          #{player.number ?? '-'}
-                        </span>
-                      </button>
-                    ))}
+                          <span className="text-xs font-semibold text-gray-400">
+                            #{player.number ?? '-'}
+                          </span>
+                        </button>
+                      );
+                    })}
 
                     {squad && eligiblePlayers.length === 0 && (
                       <p className="text-sm text-gray-500">No players available for this position.</p>
