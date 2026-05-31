@@ -248,6 +248,7 @@ export type FantasySquad = {
   players: FantasyPlayer[];
 };
 
+<<<<<<< HEAD
 export type FantasySelectedPlayer = FantasyPlayer & {
   country_code: string;
   team_id: number;
@@ -263,6 +264,8 @@ export type FantasySquadPayload = {
   bench: Record<string, FantasySelectedPlayer>;
 };
 
+=======
+>>>>>>> 85e8489 (feat/ added endpoints to fetch squads based on each team to display in frontend)
 export const getFantasySquad = async (countryCode: string): Promise<FantasySquad> => {
   const response = await fetch(`${API_BASE_URL}/fantasy/squads/${countryCode}`);
   const data = await response.json();
@@ -274,6 +277,7 @@ export const getFantasySquad = async (countryCode: string): Promise<FantasySquad
   return data;
 };
 
+<<<<<<< HEAD
 export const saveFantasySquadPayload = async (fantasySquad: FantasySquadPayload): Promise<void> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad`, {
     method: 'PATCH',
@@ -305,6 +309,8 @@ export const retrieveFantasySquadPayload = async (): Promise<RetrieveFantasySqua
   return data;
 };
 
+=======
+>>>>>>> 85e8489 (feat/ added endpoints to fetch squads based on each team to display in frontend)
 //=============================================== ROOMS ==============================================
 
 export const createRoom = async (name: string, userId: string) => {
