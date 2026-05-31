@@ -1,28 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 // 1. Import useSearchParams
 import { useSearchParams } from 'next/navigation'; 
-import { Trophy, Users, LogIn, LogOut } from 'lucide-react';
+import { Trophy, Users, LogIn, LogOut, Shirt } from 'lucide-react';
 import { logoutUser } from '@/src/app/api/api';
-import { cn } from '@/src/utils/merge';
+
+function subscribeToAuthChange(onStoreChange: () => void) {
+  window.addEventListener('auth-change', onStoreChange);
+  return () => window.removeEventListener('auth-change', onStoreChange);
+}
+
+function getStoredUsername() {
+  return localStorage.getItem('username');
+}
 
 export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
-  const [username, setUsername] = useState<string | null>(null);
+  const username = useSyncExternalStore(subscribeToAuthChange, getStoredUsername, () => null);
   // 2. Initialize searchParams
   const searchParams = useSearchParams(); 
-
-  useEffect(() => {
-    setUsername(localStorage.getItem('username'));
-    const handleAuthChange = () => {
-      setUsername(localStorage.getItem('username'));
-    };
-
-    handleAuthChange();
-    window.addEventListener('auth-change', handleAuthChange);
-    return () => window.removeEventListener('auth-change', handleAuthChange);
-  }, []);
 
   // 3. Add this new useEffect right here!
   useEffect(() => {
@@ -71,6 +68,14 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                 My Rooms
               </Link>
             )}
+
+            <Link
+              href="/fantasy"
+              className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
+            >
+              <Shirt className="h-4 w-4" />
+              Fantasy Squad
+            </Link>
           </nav>
         </div>
 
