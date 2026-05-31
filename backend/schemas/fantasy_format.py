@@ -42,6 +42,8 @@ class ApiSportsSquad(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     team: ApiSportsTeam
+
+    
     players: list[ApiSportsPlayer]
 
 
@@ -54,3 +56,32 @@ class ApiSportsSquadsResponse(BaseModel):
     results: int
     paging: ApiSportsPaging
     response: list[ApiSportsSquad]
+
+
+class FantasyFormation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    defenders: int
+    midfielders: int
+    forwards: int
+
+
+class FantasySelectedPlayer(ApiSportsPlayer):
+    model_config = ConfigDict(extra="forbid")
+
+    country_code: str
+    team_id: int
+
+
+class FantasySquadSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    formation: FantasyFormation
+    starters: dict[str, FantasySelectedPlayer]
+    bench: dict[str, FantasySelectedPlayer]
+
+
+class SaveFantasySquadRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    fantasy_squad: FantasySquadSchema
