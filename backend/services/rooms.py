@@ -59,6 +59,7 @@ def fetch_room_members_data(room_id: str) -> list:
             "user_id": uid,
             "username": user_record['username'],
             "bracket_data": user_pred['bracket_data'] if user_pred else None,
+            "fantasy_squad": user_pred['fantasy_squad'] if user_pred else None,
             # Safely grab the global_score, defaulting to 0 if they don't have one yet
             "score": user_pred['global_score'] if user_pred and user_pred.get('global_score') is not None else 0 
         })
