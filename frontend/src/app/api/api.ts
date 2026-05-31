@@ -216,12 +216,58 @@ export type FantasySquad = {
   players: FantasyPlayer[];
 };
 
+export type FantasySelectedPlayer = FantasyPlayer & {
+  country_code: string;
+  team_id: number;
+};
+
+export type FantasySquadPayload = {
+  formation: {
+    defenders: number;
+    midfielders: number;
+    forwards: number;
+  };
+  starters: Record<string, FantasySelectedPlayer>;
+  bench: Record<string, FantasySelectedPlayer>;
+};
+
 export const getFantasySquad = async (countryCode: string): Promise<FantasySquad> => {
   const response = await fetch(`${API_BASE_URL}/fantasy/squads/${countryCode}`);
   const data = await response.json();
 
   if (!response.ok) {
     throw new Error(data.detail || 'Failed to fetch squad');
+  }
+
+  return data;
+};
+
+export const saveFantasySquadPayload = async (fantasySquad: FantasySquadPayload): Promise<void> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fantasy_squad: fantasySquad }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to save fantasy squad');
+  }
+};
+
+export type RetrieveFantasySquadResponse = {
+  fantasy_squad: FantasySquadPayload | null;
+};
+
+export const retrieveFantasySquadPayload = async (): Promise<RetrieveFantasySquadResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad`, {
+    method: 'GET',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to load fantasy squad');
   }
 
   return data;
