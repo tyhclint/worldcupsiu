@@ -1,7 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { getFantasySquad, type FantasyPlayer, type FantasySquad } from '@/src/app/api/api';
+import { useEffect, useState } from 'react';
+import {
+  getFantasySquad,
+  retrieveFantasySquadPayload,
+  saveFantasySquadPayload,
+  type FantasyPlayer,
+  type FantasySelectedPlayer,
+  type FantasySquadPayload,
+  type FantasySquad,
+} from '@/src/app/api/api';
 
 const benchSlots = ['GKP', 'DEF', 'MID', 'FWD'];
 const defenderOptions = [3, 4, 5];
@@ -64,10 +72,6 @@ type Formation = {
   forwards: number;
 };
 
-type SelectedPlayer = FantasyPlayer & {
-  countryCode: string;
-};
-
 function buildPitchRows(formation: Formation): SquadSlotConfig[][] {
   return [
     [{ id: 'starter-gkp-1', label: 'GKP' }],
@@ -92,7 +96,7 @@ function SquadSlot({
   onClick,
 }: {
   label: SquadSlotLabel;
-  player?: SelectedPlayer;
+  player?: FantasySelectedPlayer;
   onClick: () => void;
 }) {
   return (
@@ -128,11 +132,45 @@ export default function FantasyPage() {
   });
   const [confirmedFormation, setConfirmedFormation] = useState<Formation | null>(null);
   const [activeSlot, setActiveSlot] = useState<SquadSlotConfig | null>(null);
-  const [selectedPlayers, setSelectedPlayers] = useState<Record<SquadSlotId, SelectedPlayer>>({});
+  const [selectedPlayers, setSelectedPlayers] = useState<Record<SquadSlotId, FantasySelectedPlayer>>({});
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [squad, setSquad] = useState<FantasySquad | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSavedFantasySquad, setHasSavedFantasySquad] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+  const [submitMessage, setSubmitMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadFantasySquad = async () => {
+      const token = localStorage.getItem('access_token');
+      if (!token) return;
+
+      try {
+        const data = await retrieveFantasySquadPayload();
+        if (!data.fantasy_squad) return;
+
+        setFormation(data.fantasy_squad.formation);
+        setConfirmedFormation(data.fantasy_squad.formation);
+        setHasSavedFantasySquad(true);
+        setSelectedPlayers({
+          ...data.fantasy_squad.starters,
+          ...data.fantasy_squad.bench,
+        });
+      } catch (err) {
+        console.error('Failed to load fantasy squad', err);
+      }
+    };
+
+    void loadFantasySquad();
+
+    const handleAuthChange = () => {
+      void loadFantasySquad();
+    };
+
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => window.removeEventListener('auth-change', handleAuthChange);
+  }, []);
 
   const openPicker = (slot: SquadSlotConfig) => {
     setActiveSlot(slot);
@@ -157,13 +195,14 @@ export default function FantasyPage() {
   };
 
   const handlePlayerPick = (player: FantasyPlayer) => {
-    if (!activeSlot || !selectedCountry) return;
+    if (!activeSlot || !selectedCountry || !squad) return;
 
     setSelectedPlayers({
       ...selectedPlayers,
       [activeSlot.id]: {
         ...player,
-        countryCode: selectedCountry,
+        country_code: selectedCountry,
+        team_id: squad.team.id,
       },
     });
 
@@ -173,12 +212,45 @@ export default function FantasyPage() {
     setError(null);
   };
 
+  const submitSquad = async () => {
+    if (!confirmedFormation) return;
+
+    const starters = Object.fromEntries(
+      Object.entries(selectedPlayers).filter(([slotId]) => slotId.startsWith('starter-')),
+    );
+    const bench = Object.fromEntries(
+      Object.entries(selectedPlayers).filter(([slotId]) => slotId.startsWith('bench-')),
+    );
+    const payload: FantasySquadPayload = {
+      formation: confirmedFormation,
+      starters,
+      bench,
+    };
+
+    setSubmitStatus('submitting');
+    setSubmitMessage('');
+
+    try {
+      await saveFantasySquadPayload(payload);
+      const successMessage = hasSavedFantasySquad ? 'Fantasy squad updated.' : 'Fantasy squad saved.';
+      setHasSavedFantasySquad(true);
+      setSubmitStatus('success');
+      setSubmitMessage(successMessage);
+    } catch (err) {
+      setSubmitStatus('error');
+      setSubmitMessage(err instanceof Error ? err.message : 'Failed to save fantasy squad.');
+    }
+  };
+
   const eligiblePlayers = activeSlot
     ? squad?.players.filter((player) => player.position === positionBySlot[activeSlot.label]) ?? []
     : [];
   const outfieldTotal = formation.defenders + formation.midfielders + formation.forwards;
   const canConfirmFormation = outfieldTotal === 10;
   const pitchRows = confirmedFormation ? buildPitchRows(confirmedFormation) : [];
+  const selectedPlayerCount = Object.keys(selectedPlayers).length;
+  const requiredPlayerCount = confirmedFormation ? 11 + benchSlots.length : 0;
+  const canSubmitSquad = confirmedFormation && selectedPlayerCount === requiredPlayerCount;
 
   return (
     <>
@@ -269,9 +341,28 @@ export default function FantasyPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex justify-end">
+            <div className="flex flex-wrap items-center justify-end gap-3">
+              {submitMessage && (
+                <p className={submitStatus === 'error' ? 'text-sm text-red-500' : 'text-sm text-green-600'}>
+                  {submitMessage}
+                </p>
+              )}
               <button
-                onClick={() => setConfirmedFormation(null)}
+                disabled={!canSubmitSquad || submitStatus === 'submitting'}
+                onClick={submitSquad}
+                className="rounded-md bg-black px-3 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+              >
+                {submitStatus === 'submitting'
+                  ? hasSavedFantasySquad ? 'Updating...' : 'Submitting...'
+                  : hasSavedFantasySquad ? 'Update squad' : 'Submit squad'}
+              </button>
+              <button
+                onClick={() => {
+                  setConfirmedFormation(null);
+                  setSelectedPlayers({});
+                  setSubmitStatus('idle');
+                  setSubmitMessage('');
+                }}
                 className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
               >
                 Change formation

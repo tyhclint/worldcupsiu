@@ -3,14 +3,14 @@ import requests
 from core.config import SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL
 
 
-def insert_prediction(bracket_data, access_token: str):
+def upsert_prediction(bracket_data, access_token: str):
     response = requests.post(
-        f"{SUPABASE_URL}/rest/v1/user_predictions",
+        f"{SUPABASE_URL}/rest/v1/user_predictions?on_conflict=user_id",
         headers={
             "apikey": SUPABASE_PUBLISHABLE_KEY,
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
-            "Prefer": "return=representation",
+            "Prefer": "resolution=merge-duplicates,return=representation",
         },
         json={
             "bracket_data": bracket_data,
