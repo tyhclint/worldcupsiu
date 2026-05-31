@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Copy, Check, Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { RoomModalProps } from '@/src/interfaces/Room';
-import { getRoomMembers } from '@/src/app/api/api';
+import { getRoomMembers, type FantasySelectedPlayer, type FantasySquadPayload } from '@/src/app/api/api';
 
 import GroupStageForm from '@/src/components/GroupStageForm';
 import BracketForm from '@/src/components/BracketForm';
@@ -70,20 +70,75 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
   };
 
   // 🆕 The Helper to render the forms
-  const renderReadOnlyBracket = () => {
-    if (!selectedUser?.bracket_data) {
-      return (
-        <div className="flex flex-col items-center justify-center py-20 text-gray-500 h-full">
-          <p className="text-lg">No bracket data available for {selectedUser?.username}.</p>
-          <button onClick={() => setSelectedUser(null)} className="mt-4 text-indigo-600 hover:underline">
-            Go Back to Leaderboard
-          </button>
-        </div>
-      );
-    }
+  const fantasyPositionLabel = {
+    Goalkeeper: 'GKP',
+    Defender: 'DEF',
+    Midfielder: 'MID',
+    Attacker: 'FWD',
+  } as const;
 
+  const getFantasyPlayersBySlotPrefix = (
+    players: Record<string, FantasySelectedPlayer>,
+    prefix: string,
+  ) => Object.entries(players)
+    .filter(([slotId]) => slotId.startsWith(prefix))
+    .sort(([slotA], [slotB]) => slotA.localeCompare(slotB))
+    .map(([, player]) => player);
+
+  const renderFantasySlot = (player: FantasySelectedPlayer) => (
+    <div
+      key={`${player.id}-${player.country_code}`}
+      className="flex h-28 w-24 flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm"
+    >
+      <img
+        src={player.photo}
+        alt={player.name}
+        className="h-14 w-14 rounded-full object-cover"
+      />
+      <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
+      <span className="text-[10px] uppercase text-white/70">
+        {fantasyPositionLabel[player.position]}
+      </span>
+    </div>
+  );
+
+  const renderFantasyPitch = (fantasySquad: FantasySquadPayload) => {
+    const starters = fantasySquad.starters ?? {};
+    const bench = fantasySquad.bench ?? {};
+    const rows = [
+      getFantasyPlayersBySlotPrefix(starters, 'starter-gkp'),
+      getFantasyPlayersBySlotPrefix(starters, 'starter-def'),
+      getFantasyPlayersBySlotPrefix(starters, 'starter-mid'),
+      getFantasyPlayersBySlotPrefix(starters, 'starter-fwd'),
+    ];
+
+    return (
+      <div className="rounded-xl bg-green-700 p-4 shadow-sm">
+        <div className="space-y-8 rounded-lg border-2 border-white/70 bg-green-600 px-4 py-8">
+          {rows.map((row, rowIndex) => (
+            <div key={rowIndex} className="flex justify-center gap-6">
+              {row.map((player) => renderFantasySlot(player))}
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 rounded-lg bg-white/20 p-4">
+          <p className="mb-3 text-center text-sm font-bold uppercase text-white">Substitutes</p>
+          <div className="flex flex-wrap justify-center gap-4">
+            {Object.entries(bench)
+              .sort(([slotA], [slotB]) => slotA.localeCompare(slotB))
+              .map(([, player]) => renderFantasySlot(player as FantasySelectedPlayer))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderReadOnlyBracket = () => {
     // Pass the raw DB JSON through your adapter!
-    const formattedData = transformDbBracketToState(selectedUser.bracket_data);
+    const formattedData = selectedUser?.bracket_data
+      ? transformDbBracketToState(selectedUser.bracket_data)
+      : null;
 
     return (
       <div className="flex flex-col h-full animate-in slide-in-from-right-4 duration-300">
@@ -103,14 +158,31 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
 
         {/* The scrolling container for the forms */}
         <div className="overflow-y-auto overflow-x-auto pr-2 flex-grow space-y-12 pb-12">
+           {formattedData ? (
+             <>
+               <div>
+                 <h4 className="text-lg font-bold mb-4 text-gray-800">Group Stage Picks</h4>
+                 <GroupStageForm readOnlyData={formattedData} />
+               </div>
+               
+               <div>
+                 <h4 className="text-lg font-bold mb-4 text-gray-800">Knockout Stage Picks</h4>
+                 <BracketForm readOnlyData={formattedData} />
+               </div>
+             </>
+           ) : (
+             <div className="rounded-lg border border-gray-200 bg-gray-50 p-6 text-gray-500">
+               No bracket data available for {selectedUser?.username}.
+             </div>
+           )}
+
            <div>
-             <h4 className="text-lg font-bold mb-4 text-gray-800">Group Stage Picks</h4>
-             <GroupStageForm readOnlyData={formattedData} />
-           </div>
-           
-           <div>
-             <h4 className="text-lg font-bold mb-4 text-gray-800">Knockout Stage Picks</h4>
-             <BracketForm readOnlyData={formattedData} />
+             <h4 className="text-lg font-bold mb-4 text-gray-800">Fantasy Squad</h4>
+             {selectedUser.fantasy_squad ? (
+               renderFantasyPitch(selectedUser.fantasy_squad)
+             ) : (
+               <p className="text-sm text-gray-500">No fantasy squad available.</p>
+             )}
            </div>
         </div>
       </div>
