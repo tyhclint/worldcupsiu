@@ -2,6 +2,7 @@ import os
 
 import requests
 
+from core.config import SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL
 from schemas.fantasy_format import ApiSportsSquad, ApiSportsSquadsResponse
 from services.results import API_FOOTBALL_BASE_URL
 
@@ -60,3 +61,44 @@ def fetch_fantasy_squad(country_code: str) -> ApiSportsSquad:
         raise ValueError(f"No squad found for country code: {country_code}")
 
     return squad_response.response[0]
+
+
+def upsert_fantasy_squad(fantasy_squad, access_token: str):
+    response = requests.post(
+        f"{SUPABASE_URL}/rest/v1/user_predictions?on_conflict=user_id",
+        headers={
+            "apikey": SUPABASE_PUBLISHABLE_KEY,
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+            "Prefer": "resolution=merge-duplicates,return=representation",
+        },
+        json={
+            "fantasy_squad": fantasy_squad,
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    return data[0] if data else None
+
+
+def retrieve_fantasy_squad(user_id: str, access_token: str):
+    response = requests.get(
+        f"{SUPABASE_URL}/rest/v1/user_predictions",
+        headers={
+            "apikey": SUPABASE_PUBLISHABLE_KEY,
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        },
+        params={
+            "select": "fantasy_squad",
+            "user_id": f"eq.{user_id}",
+            "limit": "1",
+        },
+        timeout=10,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    return data[0]["fantasy_squad"] if data else None
