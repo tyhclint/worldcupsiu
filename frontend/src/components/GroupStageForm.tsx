@@ -43,18 +43,18 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
   const isReadOnly = !!readOnlyData;
   const activePicks = isReadOnly ? readOnlyData.picks : store.picks;
 
-  return (
-    <div className="space-y-4">
+return (
+    <div className="space-y-4 max-w-full">
       {/* Hide instructions if read-only */}
       {!isReadOnly && (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 text-center md:text-left">
           Pick the top 2 teams to qualify from each group. The 3rd-place team is used in the next step.
         </p>
       )}
 
-      {/* 4-column grid — horizontal scroll on mobile */}
-      <div className={cn("overflow-x-auto pb-2", !isReadOnly && "-mx-6 px-6")}>
-        <div className="grid grid-cols-4 gap-3 min-w-[900px] md:min-w-0">
+      {/* Grid Layout: 1 column centered on mobile, 4 columns on desktop */}
+      <div className={cn("pb-2", !isReadOnly && "px-2 md:px-0")}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-md mx-auto sm:max-w-none">
           {GROUPS.map((group) => {
             const gp = activePicks[group.id] ?? {};
             
@@ -74,15 +74,15 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
               >
                 {/* Group header */}
                 <div className={cn(
-                  'px-3 py-2 border-b',
+                  'px-3 py-2 border-b min-h-[64px]',
                   complete ? 'border-teal-100 bg-teal-50/50' : 'border-gray-100 bg-gray-50'
                 )}>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 block mb-1">
                     {group.name}
                   </span>
 
                   {/* Qualifier badges */}
-                  <div className="flex flex-wrap gap-1 mt-1 min-h-[18px]">
+                  <div className="flex flex-wrap gap-1">
                     {([1, 2, 3] as const).map((rank) => {
                       const teamId = gp[rank];
                       const team = group.teams.find((t) => t.id === teamId);
@@ -125,19 +125,22 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
                         )}
                       />
 
-                      <div className="flex items-center justify-between flex-1 px-2 py-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
+                      <div className="flex items-center justify-between flex-1 px-3 py-2.5 md:px-2 md:py-2">
+                        <div className="flex items-center gap-2 min-w-0">
                           <FlagIcon
                             teamId={team.id}
                             label={team.name}
                             className={cn(
+                              // CHANGED: Reduced from text-lg to text-base on mobile
                               'text-base flex-shrink-0 transition-all duration-300',
                               eliminated && 'grayscale'
                             )}
                           />
                           <span
                             className={cn(
-                              'text-xs truncate transition-all duration-300',
+                              // CHANGED: Reduced from text-sm to text-xs on mobile. 
+                              // (If you want it even smaller, use 'text-[11px] md:text-xs' instead!)
+                              'text-xs truncate transition-all duration-300 font-medium text-overflow-ellipsis overflow-hidden',
                               eliminated ? 'text-gray-400 line-through' : 'text-gray-700'
                             )}
                           >
@@ -146,7 +149,7 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
                         </div>
 
                         {/* Rank buttons */}
-                        <div className="flex gap-0.5 flex-shrink-0 ml-1">
+                        <div className="flex gap-1 md:gap-0.5 flex-shrink-0 ml-2">
                           {([1, 2, 3] as const).map((rank) => {
                             const isActive = assignedRank === rank;
                             const styles = RANK_STYLES[rank];
@@ -156,12 +159,12 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
                                 onClick={isReadOnly ? undefined : () => store.setRank(group.id, team.id, rank)}
                                 disabled={isReadOnly}
                                 className={cn(
-                                  'h-6 w-6 rounded-md border text-[11px] font-bold transition-all duration-150',
+                                  'h-8 w-8 md:h-6 md:w-6 rounded-md border text-[13px] md:text-[11px] font-bold transition-all duration-150',
                                   isActive
                                     ? styles.active
                                     : cn('border-gray-200 text-gray-400 bg-transparent', !isReadOnly && styles.hover),
-                                  isReadOnly && !isActive && 'opacity-30', // Dim unused buttons when reading
-                                  isReadOnly && 'cursor-default' // Change cursor so it doesn't look clickable
+                                  isReadOnly && !isActive && 'opacity-30',
+                                  isReadOnly && 'cursor-default'
                                 )}
                               >
                                 {rank}
@@ -189,11 +192,11 @@ export default function GroupStageForm({ readOnlyData }: GroupStageFormProps = {
 
       {/* Progress CTA - Hidden entirely in read-only mode */}
       {!isReadOnly && (
-        <div>
+        <div className="mt-6">
           {store.allGroupsComplete() ? (
             <button
               onClick={() => store.setActiveTab('third')}
-              className="w-full rounded-lg bg-red-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600"
+              className="w-full rounded-lg bg-red-500 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-600 shadow-md"
             >
               All groups done! Pick 3rd place qualifiers →
             </button>

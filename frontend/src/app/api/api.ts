@@ -5,6 +5,7 @@ import type {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+
 //=========================================== AUTH WRAPPER ===========================================
 // call all api end points with this wrapper to handle token refresh
 
@@ -74,13 +75,13 @@ export interface LoginResponse {
   user_id: string;
 }
 
-export const signupUser = async (username: string, password: string) => {
+export const signupUser = async (email: string, username: string, password: string) => {
   const response = await fetch(`${API_BASE_URL}/auth/signup`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, username, password }), 
   });
 
   const data = await response.json();
@@ -93,7 +94,7 @@ export const signupUser = async (username: string, password: string) => {
 };
 
 export const loginUser = async (
-  username: string,
+  email: string, 
   password: string,
 ): Promise<LoginResponse> => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -101,9 +102,8 @@ export const loginUser = async (
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ username, password }),
+    body: JSON.stringify({ email, password }),
   });
-
   const data = await response.json();
 
   if (!response.ok) {
@@ -121,8 +121,40 @@ export const logoutUser = () => {
   window.location.reload();
 };
 
+export const requestPasswordReset = async (email: string) => {
+  const response = await fetch(`${API_BASE_URL}/auth/resetpassword`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email }),
+  });
 
+  const data = await response.json();
 
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to send reset email");
+  }
+
+  return data;
+};
+
+export const updatePassword = async (password: string) => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/auth/update-password`, {
+    method: "POST",
+    body: JSON.stringify({ password }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    let errorMessage = "Failed to update password, press the forget password button again";
+    
+    throw new Error(errorMessage);
+  }
+
+  return data;
+};
 //============================================= GAME LOGIC ============================================
 
 export const submitBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {

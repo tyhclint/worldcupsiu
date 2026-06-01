@@ -87,7 +87,7 @@ export default function RoomsPage() {
     );
   }
 
-  return (
+return (
     <div className="max-w-6xl mx-auto px-6 py-8 relative">
       {rooms.length === 0 ? (
         /* =========================================
@@ -110,22 +110,29 @@ export default function RoomsPage() {
            POPULATED STATE
            ========================================= */
         <div className="space-y-8 animate-in fade-in duration-500">
+          
+          {/* FIXED: Removed the duplicated flex container and h1 */}
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">My Rooms</h1>
+            <h1 className="text-xl sm:text-3xl font-bold text-gray-900 text-center sm:text-left">
+              My Rooms
+            </h1>
+            
+            {/* Desktop only button */}
             <button 
-              onClick={handleCreateRoom}
-              className="flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-all shadow-sm"
+              onClick={handleCreateRoom} 
+              className="hidden sm:flex items-center gap-2 px-4 py-2 bg-black text-white text-sm font-semibold rounded-lg hover:bg-gray-800 transition-all shadow-sm"
             >
               <Plus className="h-4 w-4" />
               New Room
             </button>
           </div>
 
+          {/* ROOMS GRID */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {rooms.map((room) => (
               <div 
                 key={room.id} 
-                onClick={() => setSelectedRoom(room)} // NEW: Triggers modal
+                onClick={() => setSelectedRoom(room)}
                 className="group relative flex flex-col items-center justify-center h-56 bg-slate-50 border border-slate-200 rounded-[2rem] p-8 text-center transition-all hover:-translate-y-1 hover:shadow-md hover:bg-white cursor-pointer"
               >
                 <h2 className="text-xl font-bold text-gray-800 mb-4 group-hover:text-black transition-colors">
@@ -137,10 +144,21 @@ export default function RoomsPage() {
               </div>
             ))}
           </div>
+
+          {/* FIXED: Moved the mobile-only button INSIDE the main space-y-8 wrapper so JSX doesn't break */}
+          <div className="mt-6 flex justify-center sm:hidden">
+            <button 
+              onClick={handleCreateRoom} 
+              className="flex items-center gap-2 px-3 py-1.5 bg-black text-white text-xs font-semibold rounded-lg hover:bg-gray-800 transition-all shadow-sm"
+            >
+              <Plus className="h-4 w-4" />
+              New Room
+            </button>
+          </div>
+
         </div>
       )}
 
-      {/* Render the extracted modal Component */}
       <RoomModal 
         room={selectedRoom} 
         onClose={() => setSelectedRoom(null)} 
