@@ -27,7 +27,7 @@ export default function PredictorTabs() {
   };
 
   return (
-    <div className="flex border-b border-gray-200">
+    <div className="flex w-full border-b border-gray-200">
       {TABS.map(({ id, label }) => {
         const enabled = isEnabled(id);
         const done = isDone(id);
@@ -39,7 +39,7 @@ export default function PredictorTabs() {
             disabled={!enabled}
             onClick={() => enabled && setActiveTab(id)}
             className={cn(
-              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-all duration-150',
+              'flex-1 flex justify-center items-center px-1 sm:px-4 py-3 text-[11px] sm:text-sm font-bold sm:font-medium border-b-2 -mb-px transition-all duration-150 whitespace-nowrap',
               active
                 ? 'text-gray-900 border-red-500'
                 : 'border-transparent',
@@ -47,8 +47,8 @@ export default function PredictorTabs() {
               !enabled && 'text-gray-300 cursor-not-allowed'
             )}
           >
-            {done && !active && <span className="mr-1.5 text-teal-500">✓</span>}
-            {label}
+            {done && !active && <span className="mr-1 sm:mr-1.5 text-teal-500 text-sm sm:text-base leading-none">✓</span>}
+            <span className="uppercase tracking-wider sm:tracking-normal sm:normal-case">{label}</span>
           </button>
         );
       })}
