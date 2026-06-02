@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Trophy, Users, LogIn, LogOut, Menu, X, Info } from 'lucide-react';
@@ -109,6 +109,12 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               >
                 Current Bracket
               </Link>
+              <Link
+                href="/fantasy"
+                className="text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
+              >
+                Fantasy
+              </Link>
               
               <button
                 onClick={() => setShowAboutModal(true)}
@@ -190,6 +196,13 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               onClick={() => setMobileMenuOpen(false)}
             >
               Current Bracket
+            </Link>
+            <Link
+              href="/fantasy"
+              className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Fantasy
             </Link>
 
             {/* NEW: About Button (Mobile) */}
