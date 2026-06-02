@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { getUserRooms, createRoom } from '@/src/app/api/api';
-import RoomModal from '@/src/components/rooms/RoomModal'; // Adjust path based on where you save it
-
-// 1. Define the actual shape of the data
+import RoomModal from '@/src/components/rooms/RoomModal'; 
+import ErrorState from '@/src/components/ErrorState';
 interface Room {
   id: string;
   name: string;
@@ -80,10 +79,7 @@ export default function RoomsPage() {
 
   if (error) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4 text-red-500">
-        <p>Something went wrong: {error}</p>
-        <button onClick={fetchRooms} className="underline hover:text-red-700">Try again</button>
-      </div>
+      <ErrorState message={error} onRetry={fetchRooms} />
     );
   }
 

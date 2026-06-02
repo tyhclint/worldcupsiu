@@ -26,7 +26,6 @@ export default function PredictorPage() {
 function PredictorPageContent() {
   const { activeTab, picks, reset, loadBracketData, allGroupsComplete } = usePredictorStore();
   
-  // 🆕 2. Add state and searchParams for the modal
   const searchParams = useSearchParams();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isConfirmingReset, setIsConfirmingReset] = useState(false);
@@ -37,7 +36,6 @@ function PredictorPageContent() {
     status: 'idle' | 'error';
   } | null>(null);
 
-  // 🆕 3. Add the URL Watcher effect
   useEffect(() => {
     if (searchParams.get('showLogin') === 'true') {
       setIsLoginModalOpen(true);
@@ -186,7 +184,6 @@ function PredictorPageContent() {
           <LoginForm 
             onSuccess={() => {
               setIsLoginModalOpen(false);
-              // Your LoginForm's internal logic will handle the router.push(redirectTo) automatically!
             }} 
             onCancel={() => setIsLoginModalOpen(false)} 
           />
