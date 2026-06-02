@@ -69,15 +69,37 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
 
           {/* Left: Logo + Desktop Nav */}
+
           <div className="flex items-center gap-8">
-            <Link
-              href="/"
-              className="flex items-center gap-2 font-bold text-gray-900"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <Trophy className="h-5 w-5 text-green-600" />
-              <span className="uppercase tracking-tight">WC26 Predictor</span>
-            </Link>
+            
+            {/* LOGO & MOBILE PROMPT WRAPPER */}
+            <div className="flex flex-col justify-center">
+              <Link
+                href="/"
+                className="flex items-center gap-2 font-bold text-gray-900"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Trophy className="h-5 w-5 text-green-600" />
+                <span className="uppercase tracking-tight">WC26 Predictor</span>
+              </Link>
+
+              {/* ✨ AESTHETIC PROMPT (MOBILE ONLY - UNDER LOGO) ✨ */}
+              {!isAuthenticated && (
+                <button 
+                  onClick={onLoginClick}
+                  // Changed ml-7 and text-left -> justify-center and w-full
+                  className="flex sm:hidden items-center justify-center w-full gap-1.5 mt-0.5 animate-in fade-in duration-700 group"
+                >
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
+                  </span>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-green-600 transition-colors">
+                    Sign in to save brackets
+                  </span>
+                </button>
+              )}
+            </div>
 
             {/* Desktop nav — hidden on mobile */}
             <nav className="hidden sm:flex items-center gap-6">
@@ -88,7 +110,6 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                 Current Bracket
               </Link>
               
-              {/* NEW: About Button (Desktop) */}
               <button
                 onClick={() => setShowAboutModal(true)}
                 className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
@@ -111,7 +132,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
 
           {/* Right: Desktop auth + Mobile hamburger */}
           <div className="flex items-center gap-4">
-            {/* Desktop auth — hidden on mobile */}
+          {/* Desktop auth — hidden on mobile */}
             <div className="hidden sm:flex items-center gap-4">
               {isAuthenticated ? (
                 <>
@@ -127,16 +148,28 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                   </button>
                 </>
               ) : (
-                <button
-                  onClick={onLoginClick}
-                  className="flex items-center gap-1.5 rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-green-500"
-                >
-                  <LogIn className="h-4 w-4" />
-                  Login
-                </button>
+                <>
+                  {/* ✨ AESTHETIC PROMPT (DESKTOP) ✨ */}
+                  <div className="hidden lg:flex items-center gap-2 mr-2 animate-in fade-in slide-in-from-right-4 duration-700">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
+                      Sign in to save brackets
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={onLoginClick}
+                    className="flex items-center gap-1.5 rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-all hover:bg-green-500 hover:shadow-md hover:-translate-y-0.5"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Login
+                  </button>
+                </>
               )}
             </div>
-
             {/* Mobile hamburger — hidden on desktop */}
             <button
               className="sm:hidden flex items-center justify-center rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
@@ -179,7 +212,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               </Link>
             )}
 
-            <div className="border-t border-gray-100 pt-4 mt-2">
+              <div className="border-t border-gray-100 pt-4 mt-2">
               {isAuthenticated ? (
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
@@ -194,13 +227,19 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                   </button>
                 </div>
               ) : (
-                <button
-                  onClick={handleLoginClick}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-md bg-green-600 px-4 py-2 text-sm font-bold text-white transition-colors hover:bg-green-500"
-                >
-                  <LogIn className="h-4 w-4" />
-                  Login
-                </button>
+                <div className="flex flex-col gap-3">
+                  {/* ✨ AESTHETIC PROMPT (MOBILE) ✨ */}
+                  <p className="text-xs text-center font-medium text-gray-400 uppercase tracking-widest">
+                    Unlock rooms & leaderboards
+                  </p>
+                  <button
+                    onClick={handleLoginClick}
+                    className="w-full flex items-center justify-center gap-1.5 rounded-md bg-green-600 px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-green-500"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Login to your account
+                  </button>
+                </div>
               )}
             </div>
           </div>

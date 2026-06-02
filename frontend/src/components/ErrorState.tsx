@@ -7,7 +7,7 @@ interface ErrorStateProps {
 
 export default function ErrorState({ message, onRetry }: ErrorStateProps) {
   return (
-    <div className="flex flex-col justify-center items-center md:items-start min-h-[60vh] gap-4 px-6 md:px-0 text-red-500 text-center md:text-left uppercase">
+    <div className="flex flex-col justify-center items-center min-h-[60vh] gap-4 px-6 md:px-0 text-red-500 text-center md:text-left uppercase">
       <p>Something went wrong: {message}</p>
       
       {onRetry && (
