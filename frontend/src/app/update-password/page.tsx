@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { updatePassword, logoutUser } from '@/src/app/api/api';
+import { updatePassword } from '@/src/app/api/api'; // Removed unused logoutUser import
 
 export default function UpdatePasswordPage() {
   const router = useRouter();
@@ -28,15 +28,10 @@ export default function UpdatePasswordPage() {
         }
       }
       
-      // Optional: Clean up the URL so the user doesn't see the massive token
+      // Clean up the URL so the user doesn't see the massive token
       window.history.replaceState(null, '', window.location.pathname);
     }
   }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +43,6 @@ export default function UpdatePasswordPage() {
 
       setIsSuccess(true);
       setLoading(false);
-
 
       setTimeout(() => {
         localStorage.removeItem('access_token');
@@ -64,47 +58,51 @@ export default function UpdatePasswordPage() {
       setLoading(false);
       setError("Failed to update password. Please try again.");
     }
-  };
+  }; // <-- This closing brace was missing!
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      {isSuccess && (
-        <div className="mb-4 p-4 text-center bg-green-100 border border-green-400 text-green-700 rounded-lg animate-pulse">
-          Password successfully reset! Redirecting...
-        </div>
-      )}
-      <div className="w-full max-w-md bg-white/70 backdrop-blur-md border border-white/40 rounded-md p-6 text-black shadow-2xl">
-        <h2 className="text-2xl font-bold mb-6 text-center tracking-wide uppercase">
-          Set New Password
-        </h2>
-        
-        {error && (
-          <div className="bg-red-500/10 border border-red-500 text-red-700 p-3 rounded mb-4 text-sm font-semibold">
-            {error}
+    <div className="flex min-h-screen flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Success message now renders cleanly right above the card container */}
+        {isSuccess && (
+          <div className="mb-4 p-4 text-center bg-green-100 border border-green-400 text-green-700 rounded-lg animate-pulse font-medium shadow-md">
+            Password successfully reset! Redirecting...
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1 text-slate-700 font-medium">New Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full bg-black/5 border border-black/10 rounded p-3 text-black focus:bg-white focus:border-green-600 outline-none transition"
-            />
-          </div>
+        <div className="bg-white/70 backdrop-blur-md border border-white/40 rounded-md p-6 text-black shadow-2xl">
+          <h2 className="text-2xl font-bold mb-6 text-center tracking-wide uppercase">
+            Set New Password
+          </h2>
+          
+          {error && (
+            <div className="bg-red-500/10 border border-red-500 text-red-700 p-3 rounded mb-4 text-sm font-semibold">
+              {error}
+            </div>
+          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded transition disabled:opacity-50 shadow-md"
-          >
-            {loading ? 'Updating...' : 'Update Password'}
-          </button>
-        </form>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm mb-1 text-slate-700 font-medium">New Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full bg-black/5 border border-black/10 rounded p-3 text-black focus:bg-white focus:border-green-600 outline-none transition"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || isSuccess} 
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded transition disabled:opacity-50 shadow-md"
+            >
+              {loading ? 'Updating...' : isSuccess ? 'Redirecting...' : 'Update Password'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
