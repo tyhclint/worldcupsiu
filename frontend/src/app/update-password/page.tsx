@@ -8,6 +8,7 @@ export default function UpdatePasswordPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
     // 1. Grab the hash from the URL (e.g., #access_token=123&refresh_token=456)
@@ -37,24 +38,41 @@ export default function UpdatePasswordPage() {
     setError(null);
     setLoading(true);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
     try {
       await updatePassword(password);
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('username');
-      localStorage.removeItem('user_id');
-      window.dispatchEvent(new Event('auth-change'));
-      router.push('/message?text=success');
-      
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-    } finally {
+
+      setIsSuccess(true);
       setLoading(false);
+
+
+      setTimeout(() => {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('username');
+        localStorage.removeItem('user_id');
+        window.dispatchEvent(new Event('auth-change'));
+        
+        router.push('/');
+      }, 3500); 
+
+    } catch (err) {
+      setLoading(false);
+      setError("Failed to update password. Please try again.");
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
+      {isSuccess && (
+        <div className="mb-4 p-4 text-center bg-green-100 border border-green-400 text-green-700 rounded-lg animate-pulse">
+          Password successfully reset! Redirecting...
+        </div>
+      )}
       <div className="w-full max-w-md bg-white/70 backdrop-blur-md border border-white/40 rounded-md p-6 text-black shadow-2xl">
         <h2 className="text-2xl font-bold mb-6 text-center tracking-wide uppercase">
           Set New Password
