@@ -1,7 +1,6 @@
 'use client';
 
-import { Suspense } from 'react';
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Navbar from '@/src/components/Navbar';
 import LoginForm from '@/src/components/LoginForm';
 
@@ -11,6 +10,13 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const [showLogin, setShowLogin] = useState(false);
+
+  useEffect(() => {
+    const openLoginModal = () => setShowLogin(true);
+
+    window.addEventListener('open-login-modal', openLoginModal);
+    return () => window.removeEventListener('open-login-modal', openLoginModal);
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-gray-50 text-gray-900">
