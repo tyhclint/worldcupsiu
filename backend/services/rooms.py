@@ -1,10 +1,10 @@
-from core.config import supabase
+from core.config import supabase_admin
 
 def create_room(name: str, user_id: str):
-    room_res = supabase.table("rooms").insert({"name": name}).execute()
+    room_res = supabase_admin.table("rooms").insert({"name": name}).execute()
     room_data = room_res.data[0]
 
-    supabase.table("user_room_links").insert({
+    supabase_admin.table("user_room_links").insert({
         "room_id": room_data["id"],
         "user_id": user_id
     }).execute()
@@ -12,14 +12,14 @@ def create_room(name: str, user_id: str):
     return room_data
 
 def join_room(room_id: str, user_id: str):
-    response = supabase.table("user_room_links").insert({
+    response = supabase_admin.table("user_room_links").insert({
         "room_id": room_id,
         "user_id": user_id
     }).execute()
     return response.data
 
 def get_user_rooms(user_id: str):
-    response = supabase.table("user_room_links") \
+    response = supabase_admin.table("user_room_links") \
         .select("room_id, rooms(id, name, created_at)") \
         .eq("user_id", user_id) \
         .execute()
@@ -34,7 +34,7 @@ def fetch_room_members_data(room_id: str) -> list:
     Returns a list of member dictionaries.
     """
     # 1. Fetch from the link table
-    members_response = supabase.table('user_room_links').select('user_id').eq('room_id', room_id).execute()
+    members_response = supabase_admin.table('user_room_links').select('user_id').eq('room_id', room_id).execute()
     
     user_ids = [record['user_id'] for record in members_response.data]
     
@@ -42,10 +42,10 @@ def fetch_room_members_data(room_id: str) -> list:
         return []
 
     # 2. Fetch from the users table (using 'user_id' instead of 'id')
-    users_res = supabase.table('users').select('user_id, username').in_('user_id', user_ids).execute()
+    users_res = supabase_admin.table('users').select('user_id, username').in_('user_id', user_ids).execute()
     
     # 3. Fetch from the predictions table (grabbing the global_score too!)
-    predictions_res = supabase.table('user_predictions').select('user_id, bracket_data, global_score').in_('user_id', user_ids).execute()
+    predictions_res = supabase_admin.table('user_predictions').select('user_id, bracket_data, global_score').in_('user_id', user_ids).execute()
     
     members_data = []
     

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header, HTTPException
 
-from core.config import supabase
+from core.config import supabase_admin
 from schemas.knockout_format import CreatePredictionRequest
 from services.predictions import insert_prediction, retrieve_prediction, update_prediction
 from services.auth import get_access_token
@@ -32,7 +32,7 @@ def retrieve_user_prediction(authorization: str = Header(...)):
     access_token = get_access_token(authorization)
 
     try:
-        user_response = supabase.auth.get_user(access_token)
+        user_response = supabase_admin.auth.get_user(access_token)
         bracket_data = retrieve_prediction(user_response.user.id, access_token)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Failed to retrieve prediction") from exc
@@ -48,7 +48,7 @@ def update_user_prediction(payload: CreatePredictionRequest, authorization: str 
     bracket_data = payload.bracket_data.model_dump(mode="json")
 
     try:
-        user_response = supabase.auth.get_user(access_token)
+        user_response = supabase_admin.auth.get_user(access_token)
         updated_prediction = update_prediction(user_response.user.id, bracket_data, access_token)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Failed to update prediction") from exc

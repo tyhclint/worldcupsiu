@@ -1,5 +1,5 @@
 # services/auth.py
-from core.config import supabase
+from core.config import supabase, supabase_admin
 from fastapi import HTTPException
 import os
 
@@ -22,7 +22,7 @@ def register_user(email: str, username: str, password: str):
 
     # Ensure the user was actually created before inserting into the public table
     if response.user:
-        supabase.table("users").insert({
+        supabase_admin.table("users").insert({
             "user_id": response.user.id,
             "username": username,
         }).execute()
