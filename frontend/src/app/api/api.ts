@@ -155,6 +155,24 @@ export const updatePassword = async (password: string) => {
 
   return data;
 };
+
+export const updateUsername = async (username: string): Promise<{ username: string }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/auth/update-username`, {
+    method: "PATCH",
+    body: JSON.stringify({ username }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to update username");
+  }
+
+  localStorage.setItem("username", data.username);
+  window.dispatchEvent(new Event("auth-change"));
+
+  return data;
+};
 //============================================= GAME LOGIC ============================================
 
 export const submitBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
