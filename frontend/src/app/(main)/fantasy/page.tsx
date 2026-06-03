@@ -10,6 +10,7 @@ import {
   type FantasySquadPayload,
   type FantasySquad,
 } from '@/src/app/api/api';
+import FantasyCountryFlag from '@/src/components/FantasyCountryFlag';
 
 const benchSlots = ['GKP', 'DEF', 'MID', 'FWD'];
 const defenderOptions = [3, 4, 5];
@@ -133,7 +134,12 @@ function SquadSlot({
           />
           <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
           <span className="text-[10px] uppercase text-white/70">{label}</span>
-          <span className="text-[10px] uppercase text-white/60">{player.country_code}</span>
+          <FantasyCountryFlag
+            countryCode={player.country_code}
+            label={player.name}
+            className="text-sm"
+            fallbackClassName="text-[10px] uppercase text-white/60"
+          />
         </>
       ) : (
         <>

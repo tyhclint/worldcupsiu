@@ -6,6 +6,7 @@ import { getRoomMembers, type FantasySelectedPlayer, type FantasySquadPayload } 
 import GroupStageForm from '@/src/components/GroupStageForm';
 import BracketForm from '@/src/components/BracketForm';
 import FlagIcon from '@/src/components/FlagIcon';
+import FantasyCountryFlag from '@/src/components/FantasyCountryFlag';
 import { transformDbBracketToState } from '@/src/lib/bracket';
 import { getTeamById } from '@/src/lib/db';
 
@@ -99,7 +100,12 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
       <span className="text-[10px] uppercase text-white/70">
         {fantasyPositionLabel[player.position]}
       </span>
-      <span className="text-[10px] uppercase text-white/60">{player.country_code}</span>
+      <FantasyCountryFlag
+        countryCode={player.country_code}
+        label={player.name}
+        className="text-sm"
+        fallbackClassName="text-[10px] uppercase text-white/60"
+      />
     </div>
   );
 
