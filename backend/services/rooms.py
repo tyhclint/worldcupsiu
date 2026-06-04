@@ -1,4 +1,4 @@
-from core.config import supabase_admin
+from core.config import supabase_admin, supabase
 
 def create_room(name: str, user_id: str):
     room_res = supabase_admin.table("rooms").insert({"name": name}).execute()
@@ -43,10 +43,6 @@ def fetch_room_members_data(room_id: str) -> list:
 
     # 2. Fetch from the users table (using 'user_id' instead of 'id')
     users_res = supabase_admin.table('users').select('user_id, username').in_('user_id', user_ids).execute()
-    
-    # 3. Fetch from the predictions table (grabbing the global_score too!)
-    predictions_res = supabase_admin.table('user_predictions').select('user_id, bracket_data, global_score').in_('user_id', user_ids).execute()
-    # 3. Fetch from the predictions and fantasy tables.
     predictions_res = supabase.table('user_predictions').select('user_id, bracket_data, global_score').in_('user_id', user_ids).execute()
     fantasy_res = supabase.table('user_fantasy_squads').select('user_id, fantasy_squad, fantasy_score').in_('user_id', user_ids).execute()
     

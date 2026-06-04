@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header, HTTPException
 
-from core.config import supabase_admin
+from core.config import supabase_admin 
 from schemas.knockout_format import CreatePredictionRequest
 from services.predictions import retrieve_prediction, update_prediction, upsert_prediction
 from services.auth import get_access_token
@@ -48,6 +48,7 @@ def update_user_prediction(payload: CreatePredictionRequest, authorization: str 
     bracket_data = payload.bracket_data.model_dump(mode="json")
 
     try:
+        # TODO: these are service functions, put it in service instead of router
         user_response = supabase_admin.auth.get_user(access_token)
         updated_prediction = update_prediction(user_response.user.id, bracket_data, access_token)
     except Exception as exc:
