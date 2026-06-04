@@ -267,6 +267,9 @@ export type FantasySquad = {
 };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 04ed0e89fc98bd240499ee2e51c7e54f80d3d351
 export type FantasySelectedPlayer = FantasyPlayer & {
   country_code: string;
   team_id: number;
@@ -282,8 +285,11 @@ export type FantasySquadPayload = {
   bench: Record<string, FantasySelectedPlayer>;
 };
 
+<<<<<<< HEAD
 =======
 >>>>>>> 85e8489 (feat/ added endpoints to fetch squads based on each team to display in frontend)
+=======
+>>>>>>> 04ed0e89fc98bd240499ee2e51c7e54f80d3d351
 export const getFantasySquad = async (countryCode: string): Promise<FantasySquad> => {
   const response = await fetch(`${API_BASE_URL}/fantasy/squads/${countryCode}`);
   const data = await response.json();
@@ -296,6 +302,9 @@ export const getFantasySquad = async (countryCode: string): Promise<FantasySquad
 };
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 04ed0e89fc98bd240499ee2e51c7e54f80d3d351
 export const saveFantasySquadPayload = async (fantasySquad: FantasySquadPayload): Promise<void> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad`, {
     method: 'PATCH',
@@ -327,8 +336,11 @@ export const retrieveFantasySquadPayload = async (): Promise<RetrieveFantasySqua
   return data;
 };
 
+<<<<<<< HEAD
 =======
 >>>>>>> 85e8489 (feat/ added endpoints to fetch squads based on each team to display in frontend)
+=======
+>>>>>>> 04ed0e89fc98bd240499ee2e51c7e54f80d3d351
 //=============================================== ROOMS ==============================================
 
 export const createRoom = async (name: string, userId: string) => {
