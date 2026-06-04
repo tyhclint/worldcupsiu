@@ -81,7 +81,7 @@ def fetch_fantasy_squad(country_code: str) -> ApiSportsSquad:
 
 def upsert_fantasy_squad(fantasy_squad, access_token: str):
     response = requests.post(
-        f"{SUPABASE_URL}/rest/v1/user_predictions?on_conflict=user_id",
+        f"{SUPABASE_URL}/rest/v1/user_fantasy_squads?on_conflict=user_id",
         headers={
             "apikey": SUPABASE_PUBLISHABLE_KEY,
             "Authorization": f"Bearer {access_token}",
@@ -101,7 +101,7 @@ def upsert_fantasy_squad(fantasy_squad, access_token: str):
 
 def retrieve_fantasy_squad(user_id: str, access_token: str):
     response = requests.get(
-        f"{SUPABASE_URL}/rest/v1/user_predictions",
+        f"{SUPABASE_URL}/rest/v1/user_fantasy_squads",
         headers={
             "apikey": SUPABASE_PUBLISHABLE_KEY,
             "Authorization": f"Bearer {access_token}",

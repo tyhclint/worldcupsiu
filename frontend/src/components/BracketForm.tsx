@@ -178,6 +178,20 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
       return;
     }
 
+    if (!localStorage.getItem('access_token')) {
+      const loginMessage = 'Log in first to submit your bracket.';
+      setSubmitStatus('error');
+      setSubmitMessage(loginMessage);
+      toast.warning(loginMessage, {
+        description: 'Create an account or log in to save this bracket.',
+        action: {
+          label: 'Login',
+          onClick: () => window.dispatchEvent(new Event('open-login-modal')),
+        },
+      });
+      return;
+    }
+
     setSubmitStatus('submitting');
     setSubmitMessage('');
     const isUpdating = store.hasSavedBracket;

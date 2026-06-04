@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Trophy, Users, LogIn, LogOut, Menu, X, Info } from 'lucide-react';
-import { logoutUser } from '@/src/app/api/api';
+import { logoutUser, updateUsername } from '@/src/app/api/api';
 import AboutModal from './AboutModal'; // Adjust path as needed
 
 export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
   const [username, setUsername] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showUsernameModal, setShowUsernameModal] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState('');
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
   
   // NEW: State to control the About modal
   const [showAboutModal, setShowAboutModal] = useState(false);
@@ -59,6 +63,40 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
   const handleAboutClick = () => {
     setMobileMenuOpen(false);
     setShowAboutModal(true);
+  };
+
+  const handleUsernameClick = () => {
+    setUsernameDraft(username ?? '');
+    setUsernameError(null);
+    setShowUsernameModal(true);
+    setMobileMenuOpen(false);
+  };
+
+  const handleUsernameSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const nextUsername = usernameDraft.trim();
+    if (nextUsername.length < 3) {
+      setUsernameError('Username must be at least 3 characters.');
+      return;
+    }
+    if (nextUsername.length > 30) {
+      setUsernameError('Username must be 30 characters or fewer.');
+      return;
+    }
+
+    setIsUpdatingUsername(true);
+    setUsernameError(null);
+
+    try {
+      const data = await updateUsername(nextUsername);
+      setUsername(data.username);
+      setShowUsernameModal(false);
+    } catch (err) {
+      setUsernameError(err instanceof Error ? err.message : 'Failed to update username.');
+    } finally {
+      setIsUpdatingUsername(false);
+    }
   };
 
   const isAuthenticated = username !== null;
@@ -142,9 +180,12 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
             <div className="hidden sm:flex items-center gap-4">
               {isAuthenticated ? (
                 <>
-                  <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
+                  <button
+                    onClick={handleUsernameClick}
+                    className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full transition-colors hover:bg-gray-200 hover:text-gray-900"
+                  >
                     {username}
-                  </span>
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-red-600 transition-colors"
@@ -228,9 +269,12 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               <div className="border-t border-gray-100 pt-4 mt-2">
               {isAuthenticated ? (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full">
+                  <button
+                    onClick={handleUsernameClick}
+                    className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-full transition-colors hover:bg-gray-200 hover:text-gray-900"
+                  >
                     {username}
-                  </span>
+                  </button>
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-red-600 transition-colors"
@@ -263,6 +307,59 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
         isOpen={showAboutModal} 
         onClose={() => setShowAboutModal(false)} 
       />
+
+      {showUsernameModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <form
+            onSubmit={handleUsernameSubmit}
+            className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-gray-900">Change Username</h2>
+              <button
+                type="button"
+                onClick={() => setShowUsernameModal(false)}
+                className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                aria-label="Close change username dialog"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <label className="grid gap-2 text-sm font-semibold text-gray-700">
+              Username
+              <input
+                value={usernameDraft}
+                onChange={(event) => setUsernameDraft(event.target.value)}
+                className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-900 outline-none transition focus:border-green-500 focus:ring-2 focus:ring-green-100"
+                maxLength={30}
+                autoFocus
+              />
+            </label>
+
+            {usernameError && (
+              <p className="mt-3 text-sm font-medium text-red-500">{usernameError}</p>
+            )}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowUsernameModal(false)}
+                className="rounded-md border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-600 transition-colors hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isUpdatingUsername}
+                className="rounded-md bg-green-600 px-3 py-2 text-sm font-bold text-white transition-colors hover:bg-green-500 disabled:cursor-not-allowed disabled:bg-gray-300"
+              >
+                {isUpdatingUsername ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </>
   );
 }

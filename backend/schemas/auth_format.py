@@ -17,3 +17,6 @@ class PasswordResetRequest(BaseModel):
 
 class UpdatePasswordRequest(BaseModel):
     password: str
+
+class UpdateUsernameRequest(BaseModel):
+    username: str

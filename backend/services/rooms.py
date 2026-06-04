@@ -44,8 +44,9 @@ def fetch_room_members_data(room_id: str) -> list:
     # 2. Fetch from the users table (using 'user_id' instead of 'id')
     users_res = supabase.table('users').select('user_id, username').in_('user_id', user_ids).execute()
     
-    # 3. Fetch from the predictions table (grabbing the global_score too!)
-    predictions_res = supabase.table('user_predictions').select('user_id, bracket_data, fantasy_squad, global_score').in_('user_id', user_ids).execute()
+    # 3. Fetch from the predictions and fantasy tables.
+    predictions_res = supabase.table('user_predictions').select('user_id, bracket_data, global_score').in_('user_id', user_ids).execute()
+    fantasy_res = supabase.table('user_fantasy_squads').select('user_id, fantasy_squad, fantasy_score').in_('user_id', user_ids).execute()
     
     members_data = []
     
@@ -54,12 +55,14 @@ def fetch_room_members_data(room_id: str) -> list:
     
         # Find this user's prediction data
         user_pred = next((p for p in predictions_res.data if p['user_id'] == uid), None)
+        user_fantasy = next((f for f in fantasy_res.data if f['user_id'] == uid), None)
         
         members_data.append({
             "user_id": uid,
             "username": user_record['username'],
             "bracket_data": user_pred['bracket_data'] if user_pred else None,
-            "fantasy_squad": user_pred['fantasy_squad'] if user_pred else None,
+            "fantasy_squad": user_fantasy['fantasy_squad'] if user_fantasy else None,
+            "fantasy_score": user_fantasy['fantasy_score'] if user_fantasy and user_fantasy.get('fantasy_score') is not None else 0,
             # Safely grab the global_score, defaulting to 0 if they don't have one yet
             "score": user_pred['global_score'] if user_pred and user_pred.get('global_score') is not None else 0 
         })
