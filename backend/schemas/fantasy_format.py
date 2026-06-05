@@ -102,3 +102,18 @@ class SaveFantasySquadRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     fantasy_squad: FantasySquadSchema
+
+
+class FantasyPlayerRating(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: int
+    name: str
+    rating: float | None = None
+
+
+class FantasyScoreResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    score: float | None
+    players: list[FantasyPlayerRating]

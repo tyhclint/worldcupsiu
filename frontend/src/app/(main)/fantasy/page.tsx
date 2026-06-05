@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   getFantasySquad,
   retrieveFantasySquadPayload,
   saveFantasySquadPayload,
+  scoreFantasySquadPayload,
   type FantasyPlayer,
   type FantasySelectedPlayer,
   type FantasySquadPayload,
@@ -166,6 +167,8 @@ export default function FantasyPage() {
   const [hasSavedFantasySquad, setHasSavedFantasySquad] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
+  const [fantasyScore, setFantasyScore] = useState<number | null>(null);
+  const [savedSquadKey, setSavedSquadKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -184,6 +187,8 @@ export default function FantasyPage() {
           ...data.fantasy_squad.starters,
           ...data.fantasy_squad.bench,
         });
+        setSavedSquadKey(JSON.stringify(data.fantasy_squad));
+        setFantasyScore(data.fantasy_score);
       } catch (err) {
         console.error('Failed to load fantasy squad', err);
       }
@@ -260,8 +265,8 @@ export default function FantasyPage() {
     return null;
   };
 
-  const submitSquad = async () => {
-    if (!confirmedFormation) return;
+  const fantasySquadPayload = useMemo<FantasySquadPayload | null>(() => {
+    if (!confirmedFormation) return null;
 
     const starters = Object.fromEntries(
       Object.entries(selectedPlayers).filter(([slotId]) => slotId.startsWith('starter-')),
@@ -269,24 +274,48 @@ export default function FantasyPage() {
     const bench = Object.fromEntries(
       Object.entries(selectedPlayers).filter(([slotId]) => slotId.startsWith('bench-')),
     );
-    const payload: FantasySquadPayload = {
+    return {
       formation: confirmedFormation,
       starters,
       bench,
     };
+  }, [confirmedFormation, selectedPlayers]);
+
+  const fantasySquadKey = fantasySquadPayload ? JSON.stringify(fantasySquadPayload) : null;
+  const hasUnsavedFantasySquadChanges = !hasSavedFantasySquad || fantasySquadKey !== savedSquadKey;
+
+  const submitSquad = async () => {
+    if (!fantasySquadPayload) return;
 
     setSubmitStatus('submitting');
     setSubmitMessage('');
 
     try {
-      await saveFantasySquadPayload(payload);
+      const data = await saveFantasySquadPayload(fantasySquadPayload);
       const successMessage = hasSavedFantasySquad ? 'Fantasy squad updated.' : 'Fantasy squad saved.';
       setHasSavedFantasySquad(true);
+      setFantasyScore(data.fantasy_score ?? null);
+      setSavedSquadKey(fantasySquadKey);
       setSubmitStatus('success');
       setSubmitMessage(successMessage);
     } catch (err) {
       setSubmitStatus('error');
       setSubmitMessage(err instanceof Error ? err.message : 'Failed to save fantasy squad.');
+    }
+  };
+
+  const scoreSquad = async () => {
+    setSubmitStatus('submitting');
+    setSubmitMessage('');
+
+    try {
+      const data = await scoreFantasySquadPayload();
+      setFantasyScore(data.score);
+      setSubmitStatus('success');
+      setSubmitMessage('Fantasy squad scored.');
+    } catch (err) {
+      setSubmitStatus('error');
+      setSubmitMessage(err instanceof Error ? err.message : 'Failed to score fantasy squad.');
     }
   };
 
@@ -298,7 +327,11 @@ export default function FantasyPage() {
   const pitchRows = confirmedFormation ? buildPitchRows(confirmedFormation) : [];
   const selectedPlayerCount = Object.keys(selectedPlayers).length;
   const requiredPlayerCount = confirmedFormation ? 11 + benchSlots.length : 0;
-  const canSubmitSquad = confirmedFormation && selectedPlayerCount === requiredPlayerCount;
+  const canSubmitSquad = Boolean(
+    confirmedFormation
+      && selectedPlayerCount === requiredPlayerCount
+      && hasUnsavedFantasySquadChanges,
+  );
 
   return (
     <>
@@ -311,7 +344,9 @@ export default function FantasyPage() {
 
           <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-right shadow-sm">
             <p className="text-xs uppercase tracking-wide text-gray-400">Points</p>
-            <p className="text-2xl font-semibold text-gray-900">0</p>
+            <p className="text-2xl font-semibold text-gray-900">
+              {fantasyScore === null ? '-' : fantasyScore.toFixed(2)}
+            </p>
           </div>
         </div>
 
@@ -405,9 +440,17 @@ export default function FantasyPage() {
                   : hasSavedFantasySquad ? 'Update squad' : 'Submit squad'}
               </button>
               <button
+                disabled={!hasSavedFantasySquad || submitStatus === 'submitting'}
+                onClick={scoreSquad}
+                className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white"
+              >
+                Score squad
+              </button>
+              <button
                 onClick={() => {
                   setConfirmedFormation(null);
                   setSelectedPlayers({});
+                  setSavedSquadKey(null);
                   setSubmitStatus('idle');
                   setSubmitMessage('');
                 }}

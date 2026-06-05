@@ -179,6 +179,8 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
     }
 
     if (!localStorage.getItem('access_token')) {
+      sessionStorage.setItem('wc2026-pending-bracket', JSON.stringify(payload));
+
       const loginMessage = 'Log in first to submit your bracket.';
       setSubmitStatus('error');
       setSubmitMessage(loginMessage);

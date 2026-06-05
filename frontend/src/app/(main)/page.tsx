@@ -9,7 +9,7 @@ import BracketForm from '@/src/components/BracketForm';
 import GroupStageForm from '@/src/components/GroupStageForm';
 import PredictorTabs from '@/src/components/PredictorTabs';
 import ThirdPlaceForm from '@/src/components/ThirdPlaceForm';
-import { retrieveBracketPayload, scoreGroupStagePayload } from '@/src/app/api/api';
+import { retrieveBracketPayload, scoreGroupStagePayload, submitBracketPayload } from '@/src/app/api/api';
 import { toGroupKey } from '@/src/lib/bracket';
 import { GROUPS } from '@/src/lib/db';
 import type { BracketDataPayload, GroupId } from '@/src/lib/types';
@@ -75,7 +75,24 @@ function PredictorPageContent() {
 
       try {
         const data = await retrieveBracketPayload();
-        loadBracketData(data.bracket_data);
+
+        if (data.bracket_data) {
+          sessionStorage.removeItem('wc2026-pending-bracket');
+          loadBracketData(data.bracket_data);
+          return;
+        }
+
+        const pendingBracket = sessionStorage.getItem('wc2026-pending-bracket');
+
+        if (pendingBracket) {
+          const pendingPayload = JSON.parse(pendingBracket);
+          await submitBracketPayload(pendingPayload);
+          sessionStorage.removeItem('wc2026-pending-bracket');
+          loadBracketData(pendingPayload.bracket_data);
+          return;
+        }
+
+        loadBracketData(null);
       } catch (error) {
         console.error('Failed to load saved bracket', error);
         loadBracketData(null);

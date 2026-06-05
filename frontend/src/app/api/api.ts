@@ -281,6 +281,17 @@ export type FantasySquadPayload = {
   bench: Record<string, FantasySelectedPlayer>;
 };
 
+export type FantasyPlayerRating = {
+  id: number;
+  name: string;
+  rating: number | null;
+};
+
+export type FantasyScoreResponse = {
+  score: number | null;
+  players: FantasyPlayerRating[];
+};
+
 
 export const getFantasySquad = async (countryCode: string): Promise<FantasySquad> => {
   const response = await fetch(`${API_BASE_URL}/fantasy/squads/${countryCode}`);
@@ -293,7 +304,15 @@ export const getFantasySquad = async (countryCode: string): Promise<FantasySquad
   return data;
 };
 
-export const saveFantasySquadPayload = async (fantasySquad: FantasySquadPayload): Promise<void> => {
+export type SaveFantasySquadResponse = {
+  valid: boolean;
+  message: string;
+  fantasy_score: number | null;
+};
+
+export const saveFantasySquadPayload = async (
+  fantasySquad: FantasySquadPayload,
+): Promise<SaveFantasySquadResponse> => {
   const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad`, {
     method: 'PATCH',
     body: JSON.stringify({ fantasy_squad: fantasySquad }),
@@ -304,10 +323,13 @@ export const saveFantasySquadPayload = async (fantasySquad: FantasySquadPayload)
   if (!response.ok) {
     throw new Error(data.detail || 'Failed to save fantasy squad');
   }
+
+  return data;
 };
 
 export type RetrieveFantasySquadResponse = {
   fantasy_squad: FantasySquadPayload | null;
+  fantasy_score: number | null;
 };
 
 export const retrieveFantasySquadPayload = async (): Promise<RetrieveFantasySquadResponse> => {
@@ -319,6 +341,20 @@ export const retrieveFantasySquadPayload = async (): Promise<RetrieveFantasySqua
 
   if (!response.ok) {
     throw new Error(data.detail || 'Failed to load fantasy squad');
+  }
+
+  return data;
+};
+
+export const scoreFantasySquadPayload = async (): Promise<FantasyScoreResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad/score`, {
+    method: 'GET',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to score fantasy squad');
   }
 
   return data;

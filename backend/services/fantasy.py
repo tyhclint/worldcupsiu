@@ -1,5 +1,7 @@
+import asyncio
 import os
 
+import httpx
 import requests
 
 from core.config import SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL
@@ -79,7 +81,90 @@ def fetch_fantasy_squad(country_code: str) -> ApiSportsSquad:
     return squad_response.response[0]
 
 
-def upsert_fantasy_squad(fantasy_squad, access_token: str):
+async def fetch_player_rating(
+    client: httpx.AsyncClient,
+    semaphore: asyncio.Semaphore,
+    player_id: int,
+    player_name: str,
+    league: int = 1,
+    season: int = 2022,
+):
+    async with semaphore:
+        response = await client.get(
+            f"{API_FOOTBALL_BASE_URL}/players",
+            headers={"x-apisports-key": os.environ["API_FOOTBALL_KEY"]},
+            params={"id": str(player_id), "league": str(league), "season": str(season)},
+        )
+    response.raise_for_status()
+
+    data = response.json()
+    players = data.get("response", [])
+    if not players:
+        raise ValueError(f"Missing rating data for {player_name}")
+
+    item = players[0]
+    player = item.get("player", {})
+    rating = item.get("statistics", [{}])[0].get("games", {}).get("rating")
+    if rating is None:
+        raise ValueError(f"Missing rating for {player_name}")
+
+    return {
+        "id": player.get("id", player_id),
+        "name": player.get("name", player_name),
+        "rating": float(rating) if rating is not None else None,
+    }
+
+
+async def score_fantasy_squad(fantasy_squad):
+    selected_players = list(fantasy_squad["starters"].values()) + list(fantasy_squad["bench"].values())
+    if len(selected_players) != 15:
+        raise ValueError("Fantasy squad must include 15 players before scoring")
+
+    semaphore = asyncio.Semaphore(10)
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        rating_results = await asyncio.gather(*[
+            fetch_player_rating(client, semaphore, player["id"], player["name"])
+            for player in selected_players
+        ], return_exceptions=True)
+
+    errors = [str(result) for result in rating_results if isinstance(result, Exception)]
+    if errors:
+        raise ValueError("; ".join(errors))
+
+    player_ratings = [result for result in rating_results if not isinstance(result, Exception)]
+    ratings = [player["rating"] for player in player_ratings if player["rating"] is not None]
+
+    return {
+        "score": round(sum(ratings) / len(ratings), 2) if ratings else None,
+        "players": player_ratings,
+    }
+
+def update_fantasy_score(user_id: str, fantasy_score: float, access_token: str):
+    response = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/user_fantasy_squads",
+        headers={
+            "apikey": SUPABASE_PUBLISHABLE_KEY,
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation",
+        },
+        params={
+            "user_id": f"eq.{user_id}",
+        },
+        json={
+            "fantasy_score": fantasy_score,
+        },
+        timeout=10,
+    )
+    if not response.ok:
+        raise ValueError(response.text)
+
+    data = response.json()
+    return data[0] if data else None
+
+
+def upsert_fantasy_squad(user_id: str, fantasy_squad, access_token: str):
     response = requests.post(
         f"{SUPABASE_URL}/rest/v1/user_fantasy_squads?on_conflict=user_id",
         headers={
@@ -89,11 +174,13 @@ def upsert_fantasy_squad(fantasy_squad, access_token: str):
             "Prefer": "resolution=merge-duplicates,return=representation",
         },
         json={
+            "user_id": user_id,
             "fantasy_squad": fantasy_squad,
         },
         timeout=10,
     )
-    response.raise_for_status()
+    if not response.ok:
+        raise ValueError(response.text)
 
     data = response.json()
     return data[0] if data else None
@@ -108,7 +195,7 @@ def retrieve_fantasy_squad(user_id: str, access_token: str):
             "Content-Type": "application/json",
         },
         params={
-            "select": "fantasy_squad",
+            "select": "fantasy_squad,fantasy_score",
             "user_id": f"eq.{user_id}",
             "limit": "1",
         },
@@ -117,4 +204,4 @@ def retrieve_fantasy_squad(user_id: str, access_token: str):
     response.raise_for_status()
 
     data = response.json()
-    return data[0]["fantasy_squad"] if data else None
+    return data[0] if data else None
