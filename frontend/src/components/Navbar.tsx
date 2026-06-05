@@ -147,12 +147,14 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               >
                 Current Bracket
               </Link>
-              <Link
-                href="/fantasy"
-                className="text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
-              >
-                Fantasy
-              </Link>
+              {isAuthenticated && (
+                <Link
+                  href="/fantasy"
+                  className="text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
+                >
+                  Fantasy
+                </Link>
+              )}
               
               <button
                 onClick={() => setShowAboutModal(true)}
@@ -238,13 +240,15 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
             >
               Current Bracket
             </Link>
-            <Link
-              href="/fantasy"
-              className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Fantasy
-            </Link>
+            {isAuthenticated && (
+              <Link
+                href="/fantasy"
+                className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Fantasy
+              </Link>
+            )}
 
             {/* NEW: About Button (Mobile) */}
             <button
