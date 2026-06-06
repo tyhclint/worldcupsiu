@@ -12,6 +12,7 @@ import {
   type FantasySquad,
 } from '@/src/app/api/api';
 import FantasyCountryFlag from '@/src/components/FantasyCountryFlag';
+import FantasyTutorialModal from '@/src/components/FantasyTutorial';
 
 const benchSlots = ['GKP', 'DEF', 'MID', 'FWD'];
 const defenderOptions = [3, 4, 5];
@@ -169,6 +170,7 @@ export default function FantasyPage() {
   const [submitMessage, setSubmitMessage] = useState('');
   const [fantasyScore, setFantasyScore] = useState<number | null>(null);
   const [savedSquadKey, setSavedSquadKey] = useState<string | null>(null);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -339,7 +341,16 @@ export default function FantasyPage() {
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">World Cup Fantasy</p>
-            <h1 className="text-3xl font-bold text-gray-900">Create Squad</h1>
+            <h1 className="flex items-center gap-3 text-3xl font-bold text-gray-900">
+              Create Squad
+              <button
+                onClick={() => setIsTutorialOpen(true)}
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-500 transition hover:bg-gray-300 hover:text-gray-900"
+                title="How to play"
+              >
+                ?
+              </button>
+            </h1>
           </div>
 
           <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-right shadow-sm">
@@ -589,6 +600,10 @@ export default function FantasyPage() {
           </div>
         </div>
       )}
+      {isTutorialOpen && (
+        <FantasyTutorialModal onClose={() => setIsTutorialOpen(false)} />
+      )}
+
     </>
   );
 }

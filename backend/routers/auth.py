@@ -38,7 +38,6 @@ async def login(req: LoginRequest):
         }
         
     except Exception as e:
-        # Updated error message to reflect email
         raise HTTPException(status_code=401, detail="Invalid email or password.")
     
 @router.post("/refresh")
