@@ -262,7 +262,7 @@ export default function FantasyPage() {
     const teamCount = selectedPlayersOutsideActiveSlot.filter(
       (selectedPlayer) => selectedPlayer.team_id === squad.team.id,
     ).length;
-    if (teamCount >= 2) return 'Max 2 players from this team';
+    if (teamCount >= 1) return 'Max 1 player from each country';
 
     return null;
   };
