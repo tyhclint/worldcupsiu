@@ -24,6 +24,7 @@ import {
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { memo } from 'react';
+import { toast } from 'sonner';
 
 // --- 1. NEW 16-SLOT DEFINITION ---
 const SLOTS = [
@@ -166,7 +167,6 @@ export default function FantasyPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasSavedFantasySquad, setHasSavedFantasySquad] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
-  const [submitMessage, setSubmitMessage] = useState('');
   const [fantasyScore, setFantasyScore] = useState<number | null>(null);
   const [savedSquadKey, setSavedSquadKey] = useState<string | null>(null);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
@@ -229,18 +229,17 @@ export default function FantasyPage() {
       });
 
       if (gkps !== 1) {
-        setSubmitMessage("You must have exactly 1 Goalkeeper on the pitch.");
         setSubmitStatus('error');
+        toast.error("You must have exactly 1 Goalkeeper on the pitch.");
         return prev;
       }
 
       if (defs < 3 || defs > 5 || mids < 3 || mids > 5 || fwds < 1 || fwds > 3) {
-        setSubmitMessage(`Invalid Formation! You cannot play a ${defs}-${mids}-${fwds}.`);
         setSubmitStatus('error');
+        toast.error(`Invalid Formation! You cannot play a ${defs}-${mids}-${fwds}.`);
         return prev; 
       }
 
-      setSubmitMessage("");
       setSubmitStatus('idle');
       return newDraft; 
     });
@@ -359,7 +358,6 @@ export default function FantasyPage() {
   const submitSquad = async () => {
     if (!fantasySquadPayload) return;
     setSubmitStatus('submitting');
-    setSubmitMessage('');
 
     try {
       const data = await saveFantasySquadPayload(fantasySquadPayload);
@@ -368,25 +366,24 @@ export default function FantasyPage() {
       setFantasyScore(data.fantasy_score ?? null);
       setSavedSquadKey(fantasySquadKey);
       setSubmitStatus('success');
-      setSubmitMessage(successMessage);
+      toast.success(successMessage);
     } catch (err) {
       setSubmitStatus('error');
-      setSubmitMessage(err instanceof Error ? err.message : 'Failed to save fantasy squad.');
+      toast.error(err instanceof Error ? err.message : 'Failed to save fantasy squad.');
     }
   };
 
   const scoreSquad = async () => {
     setSubmitStatus('submitting');
-    setSubmitMessage('');
 
     try {
       const data = await scoreFantasySquadPayload();
       setFantasyScore(data.score);
       setSubmitStatus('success');
-      setSubmitMessage('Fantasy squad scored.');
+      toast.success('Fantasy squad scored.');
     } catch (err) {
       setSubmitStatus('error');
-      setSubmitMessage(err instanceof Error ? err.message : 'Failed to score fantasy squad.');
+      toast.error(err instanceof Error ? err.message : 'Failed to score fantasy squad.');
     }
   };
 
@@ -474,16 +471,10 @@ export default function FantasyPage() {
           </div>
 
           <div className="mt-6 flex flex-wrap justify-end gap-4">
-            {submitMessage && (
-              <p className={`w-full text-right text-sm ${submitStatus === 'error' ? 'text-red-500' : 'text-green-600'}`}>
-                {submitMessage}
-              </p>
-            )}
             <button
               onClick={() => {
                 setDraftedPlayers({});
                 setSubmitStatus('idle');
-                setSubmitMessage('');
               }}
               className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
             >
