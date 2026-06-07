@@ -122,7 +122,7 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
       >
         <button
           onClick={onClick}
-          className={`flex h-28 w-20 sm:w-24 flex-col items-center justify-center overflow-hidden rounded-lg border text-white shadow-sm transition hover:scale-105 ${
+          className={`relative flex h-28 w-[4.25rem] sm:w-24 flex-col items-center justify-center overflow-hidden rounded-lg border text-white shadow-sm transition hover:scale-105 ${
             player
               ? 'border-white/50 bg-white/20 cursor-grab active:cursor-grabbing'
               : isWildcard
@@ -132,6 +132,14 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
         >
           {player ? (
             <>
+              <span className="absolute left-1.5 top-0.5 z-10">
+                <FantasyCountryFlag
+                  countryCode={player.country_code}
+                  label={player.name}
+                  className="text-sm shadow-sm"
+                  fallbackClassName="text-[9px] font-bold"
+                />
+              </span>
               <img src={player.photo} alt={player.name} className="h-14 w-14 rounded-full object-cover" />
               <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
               <span className="text-[10px] uppercase text-white/70">{player.position}</span>
@@ -392,7 +400,7 @@ export default function FantasyPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-6xl px-6 py-8">
+      <div className="mx-auto max-w-6xl px-2 py-8 sm:px-6">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-sm font-medium text-gray-500">World Cup Fantasy</p>
@@ -425,7 +433,7 @@ export default function FantasyPage() {
             </span>
           </div>
 
-          <div className="rounded-xl bg-green-700 p-4 shadow-sm">
+          <div className="rounded-xl bg-green-700 p-2 shadow-sm sm:p-4">
             <div className="space-y-6 rounded-lg border-2 border-white/70 bg-green-600 px-2 py-8 sm:px-4">
               
               {pitchRows.map((row, rowIndex) => {
@@ -433,7 +441,7 @@ export default function FantasyPage() {
                 return (
                   <div 
                     key={`pitch-row-${rowIndex}`} 
-                    className="mx-auto flex w-max justify-center gap-2 rounded-3xl bg-white/10 px-4 py-3 sm:gap-4 md:gap-6"
+                    className="mx-auto flex w-max justify-center gap-1 rounded-3xl bg-white/10 px-2 py-3 sm:gap-4 sm:px-4 md:gap-6"
                   >
                     {row.map((slot) => (
                       <DraftSlotCard 
@@ -448,10 +456,10 @@ export default function FantasyPage() {
               })}
             </div>
 
-            <div className="mt-4 rounded-lg bg-white/20 p-4">
+            <div className="mt-4 rounded-lg bg-white/20 p-2 sm:p-4">
               <p className="mb-3 text-center text-sm font-bold uppercase text-white">Substitutes</p>
               
-              <div className="mx-auto flex w-max justify-center gap-2 rounded-3xl bg-white/10 px-4 py-3 sm:gap-4 md:gap-6">
+              <div className="mx-auto flex w-full justify-center gap-1 rounded-3xl bg-white/10 px-0 py-3 sm:w-max sm:gap-4 sm:px-4 md:gap-6">
                 {benchRow.map((slot) => (
                   <DraftSlotCard 
                     key={slot.id} 

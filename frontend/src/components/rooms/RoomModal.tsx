@@ -89,8 +89,16 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
   const renderFantasySlot = (player: FantasySelectedPlayer) => (
     <div
       key={`${player.id}-${player.country_code}`}
-      className="flex h-28 w-24 flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm"
+      className="relative flex h-28 w-16 flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm sm:w-24"
     >
+      <span className="absolute left-1.5 top-0.5 z-10">
+        <FantasyCountryFlag
+          countryCode={player.country_code}
+          label={player.name}
+          className="text-sm shadow-sm"
+          fallbackClassName="text-[9px] font-bold"
+        />
+      </span>
       <img
         src={player.photo}
         alt={player.name}
@@ -100,12 +108,6 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
       <span className="text-[10px] uppercase text-white/70">
         {fantasyPositionLabel[player.position]}
       </span>
-      <FantasyCountryFlag
-        countryCode={player.country_code}
-        label={player.name}
-        className="text-sm"
-        fallbackClassName="text-[10px] uppercase text-white/60"
-      />
     </div>
   );
 
@@ -120,18 +122,18 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
     ];
 
     return (
-      <div className="rounded-xl bg-green-700 p-4 shadow-sm">
-        <div className="space-y-8 rounded-lg border-2 border-white/70 bg-green-600 px-4 py-8">
+      <div className="rounded-xl bg-green-700 p-2 shadow-sm sm:p-4">
+        <div className="space-y-6 rounded-lg border-2 border-white/70 bg-green-600 px-2 py-8 sm:px-4">
           {rows.map((row, rowIndex) => (
-            <div key={rowIndex} className="flex justify-center gap-6">
+            <div key={rowIndex} className="mx-auto flex w-max justify-center gap-1 rounded-3xl bg-white/10 px-2 py-3 sm:gap-4 sm:px-4 md:gap-6">
               {row.map((player) => renderFantasySlot(player))}
             </div>
           ))}
         </div>
 
-        <div className="mt-4 rounded-lg bg-white/20 p-4">
+        <div className="mt-4 rounded-lg bg-white/20 p-2 sm:p-4">
           <p className="mb-3 text-center text-sm font-bold uppercase text-white">Substitutes</p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="mx-auto flex w-full justify-center gap-1 rounded-3xl bg-white/10 px-0 py-3 sm:w-max sm:gap-4 sm:px-4 md:gap-6">
             {Object.entries(bench)
               .sort(([slotA], [slotB]) => slotA.localeCompare(slotB))
               .map(([, player]) => renderFantasySlot(player as FantasySelectedPlayer))}
