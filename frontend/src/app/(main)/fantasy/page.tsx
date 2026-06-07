@@ -96,7 +96,8 @@ const countryNameByCode = Object.fromEntries(
   countries.map((country) => [country.code, country.name]),
 );
 
-const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick }) {
+const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } : 
+  { slot: any, player?: FantasySelectedPlayer, onClick: () => void }) {
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: slot.id });
   const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging } = useDraggable({
     id: slot.id,
