@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import {
   getFantasySquad,
   retrieveFantasySquadPayload,
@@ -13,11 +13,33 @@ import {
 } from '@/src/app/api/api';
 import FantasyCountryFlag from '@/src/components/FantasyCountryFlag';
 import FantasyTutorialModal from '@/src/components/FantasyTutorial';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent
+} from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
+import { memo } from 'react';
 
-const benchSlots = ['GKP', 'DEF', 'MID', 'FWD'];
-const defenderOptions = [3, 4, 5];
-const midfielderOptions = [2, 3, 4, 5];
-const forwardOptions = [1, 2, 3];
+// --- 1. NEW 16-SLOT DEFINITION ---
+const SLOTS = [
+  // 11 Starters
+  { id: 'starter-gkp-1', label: 'GKP', allowedPositions: ['Goalkeeper'], originalRole: 'Goalkeeper' },
+  ...Array.from({ length: 4 }, (_, i) => ({ id: `starter-def-${i + 1}`, label: 'DEF', allowedPositions: ['Defender'], originalRole: 'Defender' })),
+  ...Array.from({ length: 4 }, (_, i) => ({ id: `starter-mid-${i + 1}`, label: 'MID', allowedPositions: ['Midfielder'], originalRole: 'Midfielder' })),
+  ...Array.from({ length: 2 }, (_, i) => ({ id: `starter-fwd-${i + 1}`, label: 'FWD', allowedPositions: ['Attacker'], originalRole: 'Attacker' })),
+  
+  // 5 Bench (GK, DEF, MID, FWD, and WC)
+  { id: 'bench-gkp-1', label: 'GKP', allowedPositions: ['Goalkeeper'], originalRole: 'Goalkeeper' }, // Restored bench GK!
+  { id: 'bench-def-1', label: 'DEF', allowedPositions: ['Defender'], originalRole: 'Defender' },
+  { id: 'bench-mid-1', label: 'MID', allowedPositions: ['Midfielder'], originalRole: 'Midfielder' },
+  { id: 'bench-fwd-1', label: 'FWD', allowedPositions: ['Attacker'], originalRole: 'Attacker' },
+  { id: 'bench-wc-1', label: 'WC', allowedPositions: ['Goalkeeper', 'Defender', 'Midfielder', 'Attacker'], originalRole: 'Wildcard' },
+];
 
 const countries = [
   { code: 'ALG', name: 'Algeria' },
@@ -74,94 +96,62 @@ const countryNameByCode = Object.fromEntries(
   countries.map((country) => [country.code, country.name]),
 );
 
-const positionBySlot = {
-  GKP: 'Goalkeeper',
-  DEF: 'Defender',
-  MID: 'Midfielder',
-  FWD: 'Attacker',
-} as const;
+const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick }) {
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: slot.id });
+  const { attributes, listeners, setNodeRef: setDraggableRef, transform, isDragging } = useDraggable({
+    id: slot.id,
+    disabled: !player,
+  });
 
-type SquadSlotLabel = keyof typeof positionBySlot;
-type SquadSlotId = string;
+  const isWildcard = slot.id === 'bench-wc-1';
 
-type SquadSlotConfig = {
-  id: SquadSlotId;
-  label: SquadSlotLabel;
-};
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  };
 
-type Formation = {
-  defenders: number;
-  midfielders: number;
-  forwards: number;
-};
-
-function buildPitchRows(formation: Formation): SquadSlotConfig[][] {
-  return [
-    [{ id: 'starter-gkp-1', label: 'GKP' }],
-    Array.from({ length: formation.defenders }, (_, index) => ({
-      id: `starter-def-${index + 1}`,
-      label: 'DEF',
-    })),
-    Array.from({ length: formation.midfielders }, (_, index) => ({
-      id: `starter-mid-${index + 1}`,
-      label: 'MID',
-    })),
-    Array.from({ length: formation.forwards }, (_, index) => ({
-      id: `starter-fwd-${index + 1}`,
-      label: 'FWD',
-    })),
-  ];
-}
-
-function SquadSlot({
-  label,
-  player,
-  onClick,
-}: {
-  label: SquadSlotLabel;
-  player?: FantasySelectedPlayer;
-  onClick: () => void;
-}) {
   return (
-    <button
-      onClick={onClick}
-      className="flex h-28 w-24 flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm transition hover:bg-white/25"
-    >
-      {player ? (
-        <>
-          <img
-            src={player.photo}
-            alt={player.name}
-            className="h-14 w-14 rounded-full object-cover"
-          />
-          <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
-          <span className="text-[10px] uppercase text-white/70">{label}</span>
-          <FantasyCountryFlag
-            countryCode={player.country_code}
-            label={player.name}
-            className="text-sm"
-            fallbackClassName="text-[10px] uppercase text-white/60"
-          />
-        </>
-      ) : (
-        <>
-          <span className="text-xs font-bold">{label}</span>
-          <span className="mt-2 text-[10px] uppercase text-white/70">Pick player</span>
-        </>
-      )}
-    </button>
+    // Droppable is the outer container
+    <div ref={setDroppableRef} className={`rounded-xl transition-all ${isOver ? 'scale-110 ring-4 ring-yellow-400' : ''}`}>
+      {/* Draggable handle is separate from the click target */}
+      <div
+        ref={setDraggableRef}
+        style={style}
+        {...(player ? { ...attributes, ...listeners } : {})}
+      >
+        <button
+          onClick={onClick}
+          className={`flex h-28 w-20 sm:w-24 flex-col items-center justify-center overflow-hidden rounded-lg border text-white shadow-sm transition hover:scale-105 ${
+            player
+              ? 'border-white/50 bg-white/20 cursor-grab active:cursor-grabbing'
+              : isWildcard
+              ? 'border-dashed border-yellow-400 bg-yellow-400/20 cursor-pointer'
+              : 'border-white/30 bg-white/10 hover:bg-white/20 cursor-pointer'
+          }`}
+        >
+          {player ? (
+            <>
+              <img src={player.photo} alt={player.name} className="h-14 w-14 rounded-full object-cover" />
+              <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
+              <span className="text-[10px] uppercase text-white/70">{player.position}</span>
+            </>
+          ) : (
+            <>
+              <span className="mb-1 text-2xl">{isWildcard ? '🌟' : '+'}</span>
+              <span className="text-[10px] sm:text-xs font-bold text-center leading-tight px-1">{slot.label}</span>
+              <span className="mt-1 text-[8px] uppercase text-white/50">Pick Player</span>
+            </>
+          )}
+        </button>
+      </div>
+    </div>
   );
-}
+});
 
 export default function FantasyPage() {
-  const [formation, setFormation] = useState<Formation>({
-    defenders: 4,
-    midfielders: 4,
-    forwards: 2,
-  });
-  const [confirmedFormation, setConfirmedFormation] = useState<Formation | null>(null);
-  const [activeSlot, setActiveSlot] = useState<SquadSlotConfig | null>(null);
-  const [selectedPlayers, setSelectedPlayers] = useState<Record<SquadSlotId, FantasySelectedPlayer>>({});
+  const [draftedPlayers, setDraftedPlayers] = useState<Record<string, FantasySelectedPlayer>>({});
+  const [activeSlot, setActiveSlot] = useState<any | null>(null);
+  
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [squad, setSquad] = useState<FantasySquad | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -173,6 +163,80 @@ export default function FantasyPage() {
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { pitchRows, benchRow } = useMemo(() => {
+    const rows: Record<string, any[]> = { Goalkeeper: [], Defender: [], Midfielder: [], Attacker: [] };
+    const bench: any[] = [];
+
+    SLOTS.forEach(slot => {
+      const player = draftedPlayers[slot.id];
+      if (slot.id.startsWith('starter-')) {
+        const position = player ? player.position : slot.originalRole;
+        if (rows[position]) rows[position].push(slot);
+      } else {
+        bench.push(slot);
+      }
+    });
+
+    return { 
+      pitchRows: [rows.Goalkeeper, rows.Defender, rows.Midfielder, rows.Attacker],
+      benchRow: bench
+    };
+  }, [draftedPlayers]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
+
+  const handleDragEnd = useCallback((event: DragEndEvent)=> {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const sourceId = active.id.toString();
+    const targetId = over.id.toString();
+
+    setDraftedPlayers((prev) => {
+      const newDraft = { ...prev };
+      const sourcePlayer = newDraft[sourceId];
+      const targetPlayer = newDraft[targetId];
+
+      if (targetPlayer) newDraft[sourceId] = targetPlayer;
+      else delete newDraft[sourceId];
+
+      if (sourcePlayer) newDraft[targetId] = sourcePlayer;
+      else delete newDraft[targetId];
+
+      // Validator checks everyone on the pitch
+      let defs = 0, mids = 0, fwds = 0, gkps = 0;
+      
+      SLOTS.filter(s => s.id.startsWith('starter-')).forEach(slot => {
+        const p = newDraft[slot.id];
+        const pos = p ? p.position : slot.originalRole;
+        if (pos === 'Defender') defs++;
+        if (pos === 'Midfielder') mids++;
+        if (pos === 'Attacker') fwds++;
+        if (pos === 'Goalkeeper') gkps++;
+      });
+
+      if (gkps !== 1) {
+        setSubmitMessage("You must have exactly 1 Goalkeeper on the pitch.");
+        setSubmitStatus('error');
+        return prev;
+      }
+
+      if (defs < 3 || defs > 5 || mids < 3 || mids > 5 || fwds < 1 || fwds > 3) {
+        setSubmitMessage(`Invalid Formation! You cannot play a ${defs}-${mids}-${fwds}.`);
+        setSubmitStatus('error');
+        return prev; 
+      }
+
+      setSubmitMessage("");
+      setSubmitStatus('idle');
+      return newDraft; 
+    });
+  }, []);
+
   useEffect(() => {
     const loadFantasySquad = async () => {
       const token = localStorage.getItem('access_token');
@@ -182,10 +246,8 @@ export default function FantasyPage() {
         const data = await retrieveFantasySquadPayload();
         if (!data.fantasy_squad) return;
 
-        setFormation(data.fantasy_squad.formation);
-        setConfirmedFormation(data.fantasy_squad.formation);
         setHasSavedFantasySquad(true);
-        setSelectedPlayers({
+        setDraftedPlayers({
           ...data.fantasy_squad.starters,
           ...data.fantasy_squad.bench,
         });
@@ -197,21 +259,10 @@ export default function FantasyPage() {
     };
 
     void loadFantasySquad();
-
-    const handleAuthChange = () => {
-      void loadFantasySquad();
-    };
-
+    const handleAuthChange = () => void loadFantasySquad();
     window.addEventListener('auth-change', handleAuthChange);
     return () => window.removeEventListener('auth-change', handleAuthChange);
   }, []);
-
-  const openPicker = (slot: SquadSlotConfig) => {
-    setActiveSlot(slot);
-    setSelectedCountry(null);
-    setSquad(null);
-    setError(null);
-  };
 
   const handleCountryPick = async (countryCode: string) => {
     setSelectedCountry(countryCode);
@@ -232,8 +283,8 @@ export default function FantasyPage() {
     if (!activeSlot || !selectedCountry || !squad) return;
     if (getPlayerUnavailableReason(player)) return;
 
-    setSelectedPlayers({
-      ...selectedPlayers,
+    setDraftedPlayers({
+      ...draftedPlayers,
       [activeSlot.id]: {
         ...player,
         country_code: selectedCountry,
@@ -247,48 +298,57 @@ export default function FantasyPage() {
     setError(null);
   };
 
-  const selectedPlayersOutsideActiveSlot = Object.entries(selectedPlayers)
+  const draftedPlayersOutsideActiveSlot = Object.entries(draftedPlayers)
     .filter(([slotId]) => slotId !== activeSlot?.id)
     .map(([, player]) => player);
 
   const getPlayerUnavailableReason = (player: FantasyPlayer) => {
     if (!squad) return null;
 
-    const alreadySelected = selectedPlayersOutsideActiveSlot.some(
-      (selectedPlayer) => selectedPlayer.id === player.id,
+    const alreadySelected = draftedPlayersOutsideActiveSlot.some(
+      (draftedPlayer) => draftedPlayer.id === player.id,
     );
     if (alreadySelected) return 'Already selected';
 
-    const teamCount = selectedPlayersOutsideActiveSlot.filter(
-      (selectedPlayer) => selectedPlayer.team_id === squad.team.id,
+    const teamCount = draftedPlayersOutsideActiveSlot.filter(
+      (draftedPlayer) => draftedPlayer.team_id === squad.team.id,
     ).length;
-    if (teamCount >= 2) return 'Max 2 players from this team';
+    if (teamCount >= 1) return 'Max 1 player from each country';
 
     return null;
   };
 
   const fantasySquadPayload = useMemo<FantasySquadPayload | null>(() => {
-    if (!confirmedFormation) return null;
+    // UPDATED to 16
+    if (Object.keys(draftedPlayers).length < 16) return null;
 
-    const starters = Object.fromEntries(
-      Object.entries(selectedPlayers).filter(([slotId]) => slotId.startsWith('starter-')),
-    );
-    const bench = Object.fromEntries(
-      Object.entries(selectedPlayers).filter(([slotId]) => slotId.startsWith('bench-')),
-    );
+    const starters: Record<string, FantasySelectedPlayer> = {};
+    const bench: Record<string, FantasySelectedPlayer> = {};
+    let defs = 0, mids = 0, fwds = 0;
+
+    Object.entries(draftedPlayers).forEach(([slotId, player]) => {
+      if (slotId.startsWith('starter-')) {
+        starters[slotId] = player;
+        if (slotId.includes('-def-')) defs++;
+        if (slotId.includes('-mid-')) mids++;
+        if (slotId.includes('-fwd-')) fwds++;
+      } else if (slotId.startsWith('bench-')) {
+        bench[slotId] = player;
+      }
+    });
+
     return {
-      formation: confirmedFormation,
+      formation: { defenders: defs, midfielders: mids, forwards: fwds },
       starters,
       bench,
     };
-  }, [confirmedFormation, selectedPlayers]);
+  }, [draftedPlayers]);
 
   const fantasySquadKey = fantasySquadPayload ? JSON.stringify(fantasySquadPayload) : null;
   const hasUnsavedFantasySquadChanges = !hasSavedFantasySquad || fantasySquadKey !== savedSquadKey;
 
   const submitSquad = async () => {
     if (!fantasySquadPayload) return;
-
     setSubmitStatus('submitting');
     setSubmitMessage('');
 
@@ -322,18 +382,12 @@ export default function FantasyPage() {
   };
 
   const eligiblePlayers = activeSlot
-    ? squad?.players.filter((player) => player.position === positionBySlot[activeSlot.label]) ?? []
+    ? squad?.players.filter((player) => activeSlot.allowedPositions.includes(player.position)) ?? []
     : [];
-  const outfieldTotal = formation.defenders + formation.midfielders + formation.forwards;
-  const canConfirmFormation = outfieldTotal === 10;
-  const pitchRows = confirmedFormation ? buildPitchRows(confirmedFormation) : [];
-  const selectedPlayerCount = Object.keys(selectedPlayers).length;
-  const requiredPlayerCount = confirmedFormation ? 11 + benchSlots.length : 0;
-  const canSubmitSquad = Boolean(
-    confirmedFormation
-      && selectedPlayerCount === requiredPlayerCount
-      && hasUnsavedFantasySquadChanges,
-  );
+
+  const selectedPlayerCount = Object.keys(draftedPlayers).length;
+  // UPDATED to 16
+  const canSubmitSquad = Boolean(selectedPlayerCount === 16 && hasUnsavedFantasySquadChanges);
 
   return (
     <>
@@ -361,151 +415,90 @@ export default function FantasyPage() {
           </div>
         </div>
 
-        {!confirmedFormation ? (
-          <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="mb-5">
-              <h2 className="text-xl font-bold text-gray-900">Choose your formation</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Pick 10 outfield players before building your squad.
-              </p>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              <label className="grid gap-2 text-sm font-semibold text-gray-700">
-                Defenders
-                <select
-                  value={formation.defenders}
-                  onChange={(event) => setFormation({
-                    ...formation,
-                    defenders: Number(event.target.value),
-                  })}
-                  className="rounded-md border border-gray-200 bg-white px-3 py-2"
-                >
-                  {defenderOptions.map((count) => (
-                    <option key={count} value={count}>{count}</option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="grid gap-2 text-sm font-semibold text-gray-700">
-                Midfielders
-                <select
-                  value={formation.midfielders}
-                  onChange={(event) => setFormation({
-                    ...formation,
-                    midfielders: Number(event.target.value),
-                  })}
-                  className="rounded-md border border-gray-200 bg-white px-3 py-2"
-                >
-                  {midfielderOptions.map((count) => (
-                    <option key={count} value={count}>{count}</option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="grid gap-2 text-sm font-semibold text-gray-700">
-                Forwards
-                <select
-                  value={formation.forwards}
-                  onChange={(event) => setFormation({
-                    ...formation,
-                    forwards: Number(event.target.value),
-                  })}
-                  className="rounded-md border border-gray-200 bg-white px-3 py-2"
-                >
-                  {forwardOptions.map((count) => (
-                    <option key={count} value={count}>{count}</option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <p className={canConfirmFormation ? 'text-sm text-gray-500' : 'text-sm text-red-500'}>
-                Outfield total: {outfieldTotal}/10
-              </p>
-              <button
-                disabled={!canConfirmFormation}
-                onClick={() => setConfirmedFormation(formation)}
-                className="rounded-md bg-black px-4 py-2 text-sm font-bold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
-              >
-                Create squad
-              </button>
-            </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-xl font-bold text-gray-900">Build Your Squad</h2>
+            <span className="text-xl font-bold text-gray-900">
+              {selectedPlayerCount} <span className="text-gray-400">/ 16</span>
+            </span>
           </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center justify-end gap-3">
-              {submitMessage && (
-                <p className={submitStatus === 'error' ? 'text-sm text-red-500' : 'text-sm text-green-600'}>
-                  {submitMessage}
-                </p>
-              )}
-              <button
-                disabled={!canSubmitSquad || submitStatus === 'submitting'}
-                onClick={submitSquad}
-                className="rounded-md bg-black px-3 py-2 text-sm font-semibold text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
-              >
-                {submitStatus === 'submitting'
-                  ? hasSavedFantasySquad ? 'Updating...' : 'Submitting...'
-                  : hasSavedFantasySquad ? 'Update squad' : 'Submit squad'}
-              </button>
-              <button
-                disabled={!hasSavedFantasySquad || submitStatus === 'submitting'}
-                onClick={scoreSquad}
-                className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white"
-              >
-                Score squad
-              </button>
-              <button
-                onClick={() => {
-                  setConfirmedFormation(null);
-                  setSelectedPlayers({});
-                  setSavedSquadKey(null);
-                  setSubmitStatus('idle');
-                  setSubmitMessage('');
-                }}
-                className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50"
-              >
-                Change formation
-              </button>
-            </div>
 
-            <div className="rounded-xl bg-green-700 p-4 shadow-sm">
-              <div className="space-y-8 rounded-lg border-2 border-white/70 bg-green-600 px-4 py-8">
-                {pitchRows.map((row, rowIndex) => (
-                  <div key={rowIndex} className="flex justify-center gap-6">
+          <div className="rounded-xl bg-green-700 p-4 shadow-sm">
+            <div className="space-y-6 rounded-lg border-2 border-white/70 bg-green-600 px-2 py-8 sm:px-4">
+              
+              {pitchRows.map((row, rowIndex) => {
+                if (row.length === 0) return null;
+                return (
+                  <div 
+                    key={`pitch-row-${rowIndex}`} 
+                    className="mx-auto flex w-max justify-center gap-2 rounded-3xl bg-white/10 px-4 py-3 sm:gap-4 md:gap-6"
+                  >
                     {row.map((slot) => (
-                      <SquadSlot
-                        key={slot.id}
-                        label={slot.label}
-                        player={selectedPlayers[slot.id]}
-                        onClick={() => openPicker(slot)}
+                      <DraftSlotCard 
+                        key={slot.id} 
+                        slot={slot} 
+                        player={draftedPlayers[slot.id]} 
+                        onClick={() => setActiveSlot(slot)} 
                       />
                     ))}
                   </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 rounded-lg bg-white/20 p-4">
+              <p className="mb-3 text-center text-sm font-bold uppercase text-white">Substitutes</p>
+              
+              <div className="mx-auto flex w-max justify-center gap-2 rounded-3xl bg-white/10 px-4 py-3 sm:gap-4 md:gap-6">
+                {benchRow.map((slot) => (
+                  <DraftSlotCard 
+                    key={slot.id} 
+                    slot={slot} 
+                    player={draftedPlayers[slot.id]} 
+                    onClick={() => setActiveSlot(slot)} 
+                  />
                 ))}
               </div>
 
-              <div className="mt-4 rounded-lg bg-white/20 p-4">
-                <p className="mb-3 text-center text-sm font-bold uppercase text-white">Substitutes</p>
-                <div className="flex flex-wrap justify-center gap-4">
-                  {benchSlots.map((slot, index) => (
-                    <SquadSlot
-                      key={`${slot}-${index}`}
-                      label={slot as SquadSlotLabel}
-                      player={selectedPlayers[`bench-${slot.toLowerCase()}-${index + 1}`]}
-                      onClick={() => openPicker({
-                        id: `bench-${slot.toLowerCase()}-${index + 1}`,
-                        label: slot as SquadSlotLabel,
-                      })}
-                    />
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
-        )}
+
+          <div className="mt-6 flex flex-wrap justify-end gap-4">
+            {submitMessage && (
+              <p className={`w-full text-right text-sm ${submitStatus === 'error' ? 'text-red-500' : 'text-green-600'}`}>
+                {submitMessage}
+              </p>
+            )}
+            <button
+              onClick={() => {
+                setDraftedPlayers({});
+                setSubmitStatus('idle');
+                setSubmitMessage('');
+              }}
+              className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
+            >
+              Reset
+            </button>
+            <button
+              disabled={!hasSavedFantasySquad || submitStatus === 'submitting'}
+              onClick={scoreSquad}
+              className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white"
+            >
+              Score squad
+            </button>
+            <button
+              disabled={!canSubmitSquad || submitStatus === 'submitting'}
+              onClick={submitSquad}
+              className="rounded-md bg-black px-6 py-2 text-sm font-bold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:bg-gray-300"
+            >
+              {submitStatus === 'submitting'
+                ? hasSavedFantasySquad ? 'Updating...' : 'Submitting...'
+                : hasSavedFantasySquad ? 'Update squad' : 'Submit squad'}
+            </button>
+          </div>
+        </div>
+        </DndContext>
       </div>
 
       {activeSlot && (
@@ -527,14 +520,22 @@ export default function FantasyPage() {
             </div>
 
             {!selectedCountry ? (
-              <div className="grid max-h-96 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">
+              <div className="grid max-h-[400px] grid-cols-2 gap-3 overflow-y-auto p-1 sm:grid-cols-3">
                 {countries.map((country) => (
                   <button
                     key={country.code}
                     onClick={() => handleCountryPick(country.code)}
-                    className="rounded-md border border-gray-200 px-3 py-2 text-left text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="group flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition-all duration-200 hover:border-gray-400 hover:bg-gray-50 hover:shadow-md"
                   >
-                    {country.name}
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-100 text-lg transition-transform duration-200 group-hover:scale-110">
+                      <FantasyCountryFlag 
+                        countryCode={country.code} 
+                        label={country.name} 
+                      />
+                    </div>
+                    <span className="text-sm font-semibold text-gray-700 transition-colors group-hover:text-black">
+                      {country.name}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -600,10 +601,10 @@ export default function FantasyPage() {
           </div>
         </div>
       )}
+      
       {isTutorialOpen && (
         <FantasyTutorialModal onClose={() => setIsTutorialOpen(false)} />
       )}
-
     </>
   );
 }
