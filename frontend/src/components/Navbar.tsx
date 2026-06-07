@@ -145,7 +145,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
                 href="/"
                 className="text-sm font-medium text-gray-600 hover:font-bold hover:text-gray-900 transition-colors"
               >
-                Current Bracket
+                Bracket Predictions
               </Link>
               {isAuthenticated && (
                 <Link
@@ -238,7 +238,7 @@ export default function Navbar({ onLoginClick }: { onLoginClick: () => void }) {
               className="text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Current Bracket
+              Bracket Predictions
             </Link>
             {isAuthenticated && (
               <Link
