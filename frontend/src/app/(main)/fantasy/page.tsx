@@ -93,6 +93,13 @@ const countries = [
   { code: 'UZB', name: 'Uzbekistan' },
 ];
 
+  const fantasyPositionLabel = {
+    Goalkeeper: 'GKP',
+    Defender: 'DEF',
+    Midfielder: 'MID',
+    Attacker: 'FWD',
+  } as const;
+
 const countryNameByCode = Object.fromEntries(
   countries.map((country) => [country.code, country.name]),
 );
@@ -144,7 +151,7 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
               </span>
               <img src={player.photo} alt={player.name} className="h-11 w-11 sm:h-14 sm:w-14 rounded-full object-cover" />
               <span className={`mt-1 max-w-full truncate px-1 font-bold ${isBench ? 'text-[10px]' : 'text-xs'}`}>{player.name}</span>
-              <span className={`uppercase text-white/70 ${isBench ? 'text-[8px]' : 'text-[10px]'}`}>{player.position}</span>
+              <span className={`uppercase text-white/70 ${isBench ? 'text-[8px]' : 'text-[10px]'}`}>{fantasyPositionLabel[player.position]}</span>
             </>
           ) : (
             <>

@@ -71,7 +71,6 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
     return { name: "TBC", flag: "❓" };
   };
 
-  // 🆕 The Helper to render the forms
   const fantasyPositionLabel = {
     Goalkeeper: 'GKP',
     Defender: 'DEF',
