@@ -91,7 +91,7 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
 const renderFantasySlot = (player: FantasySelectedPlayer) => (
   <div
     key={`${player.id}-${player.country_code}`}
-    className="relative flex h-24 w-[3.20rem] flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm"
+    className="relative flex h-24 w-[3.20rem] sm:h-28 sm:w-20 md:h-32 md:w-24 flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm"
   >
     <span className="absolute left-1 top-0.5 z-10">
       <FantasyCountryFlag
@@ -104,10 +104,10 @@ const renderFantasySlot = (player: FantasySelectedPlayer) => (
     <img
       src={player.photo}
       alt={player.name}
-      className="h-10 w-10 rounded-full object-cover"
+      className="h-10 w-10 sm:h-12 sm:w-12 md:h-14 md:w-14 rounded-full object-cover"
     />
-    <span className="mt-1 max-w-full truncate px-1 text-[10px] font-bold">{player.name}</span>
-    <span className="text-[8px] uppercase text-white/70">
+    <span className="mt-1 max-w-full truncate px-1 text-[10px] sm:text-xs font-bold">{player.name}</span>
+    <span className="text-[8px] sm:text-[10px] uppercase text-white/70">
       {fantasyPositionLabel[player.position]}
     </span>
   </div>
