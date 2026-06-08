@@ -157,7 +157,6 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
   const activeKnockoutPicks = isReadOnly ? readOnlyData.knockoutPicks : store.knockoutPicks;
   
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
-  const [submitMessage, setSubmitMessage] = useState('');
 
   const matchesByRound = useMemo(
     () => resolveMatchesByRound(activePicks, activeThirdPicks, activeKnockoutPicks),
@@ -173,15 +172,15 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
     const payload = store.buildPredictionPayload();
     if (!payload) {
       setSubmitStatus('error');
-      setSubmitMessage('Complete every knockout match before submitting.');
       toast.error('Complete every knockout match before submitting.');
       return;
     }
 
     if (!localStorage.getItem('access_token')) {
+      sessionStorage.setItem('wc2026-pending-bracket', JSON.stringify(payload));
+
       const loginMessage = 'Log in first to submit your bracket.';
       setSubmitStatus('error');
-      setSubmitMessage(loginMessage);
       toast.warning(loginMessage, {
         description: 'Create an account or log in to save this bracket.',
         action: {
@@ -193,7 +192,6 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
     }
 
     setSubmitStatus('submitting');
-    setSubmitMessage('');
     const isUpdating = store.hasSavedBracket;
 
     try {
@@ -206,13 +204,11 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
 
       setSubmitStatus('success');
       const successMessage = isUpdating ? 'Bracket successfully updated.' : 'Bracket payload successfully saved.';
-      setSubmitMessage(successMessage);
       toast.success(successMessage);
     } catch (error) {
       const fallbackMessage = isUpdating ? 'Unable to update bracket.' : 'Unable to submit bracket.';
       const errorMessage = error instanceof Error ? error.message : fallbackMessage;
       setSubmitStatus('error');
-      setSubmitMessage(errorMessage);
       toast.error(fallbackMessage, {
         description: errorMessage,
       });
@@ -339,15 +335,6 @@ export default function BracketForm({ readOnlyData }: BracketFormProps) {
           })}
         </div>
       </div>
-      
-      {!isReadOnly && submitMessage && (
-        <p className={cn(
-          'text-sm font-medium',
-          submitStatus === 'success' ? 'text-teal-600' : 'text-red-600',
-        )}>
-          {submitMessage}
-        </p>
-      )}
     </div>
   );
 }

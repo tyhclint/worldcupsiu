@@ -10,7 +10,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 // call all api end points with this wrapper to handle token refresh
 
 export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
-  let token = localStorage.getItem('access_token');
+  const token = localStorage.getItem('access_token');
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -52,7 +52,7 @@ export const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
           logoutUser();
           throw new Error('Session expired. Please log in again.');
         }
-      } catch (error) {
+      } catch {
         logoutUser();
         throw new Error('Session expired. Please log in again.');
       }
@@ -155,6 +155,24 @@ export const updatePassword = async (password: string) => {
 
   return data;
 };
+
+export const updateUsername = async (username: string): Promise<{ username: string }> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/auth/update-username`, {
+    method: "PATCH",
+    body: JSON.stringify({ username }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || "Failed to update username");
+  }
+
+  localStorage.setItem("username", data.username);
+  window.dispatchEvent(new Event("auth-change"));
+
+  return data;
+};
 //============================================= GAME LOGIC ============================================
 
 export const submitBracketPayload = async (payload: CreatePredictionRequest): Promise<void> => {
@@ -223,6 +241,120 @@ export const scoreGroupStagePayload = async (
     throw new Error(
       data.detail || `Score request failed with ${response.status}`,
     );
+  }
+
+  return data;
+};
+
+//============================================== FANTASY =============================================
+
+export type FantasyPlayer = {
+  id: number;
+  name: string;
+  age: number | null;
+  number: number | null;
+  position: 'Goalkeeper' | 'Defender' | 'Midfielder' | 'Attacker';
+  photo: string;
+};
+
+export type FantasySquad = {
+  team: {
+    id: number;
+    name: string;
+    logo: string;
+  };
+  players: FantasyPlayer[];
+};
+
+export type FantasySelectedPlayer = FantasyPlayer & {
+  country_code: string;
+  team_id: number;
+};
+
+export type FantasySquadPayload = {
+  formation: {
+    defenders: number;
+    midfielders: number;
+    forwards: number;
+  };
+  starters: Record<string, FantasySelectedPlayer>;
+  bench: Record<string, FantasySelectedPlayer>;
+};
+
+export type FantasyPlayerRating = {
+  id: number;
+  name: string;
+  rating: number | null;
+};
+
+export type FantasyScoreResponse = {
+  score: number | null;
+  players: FantasyPlayerRating[];
+};
+
+
+export const getFantasySquad = async (countryCode: string): Promise<FantasySquad> => {
+  const response = await fetch(`${API_BASE_URL}/fantasy/squads/${countryCode}`);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to fetch squad');
+  }
+
+  return data;
+};
+
+export type SaveFantasySquadResponse = {
+  valid: boolean;
+  message: string;
+  fantasy_score: number | null;
+};
+
+export const saveFantasySquadPayload = async (
+  fantasySquad: FantasySquadPayload,
+): Promise<SaveFantasySquadResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad`, {
+    method: 'PATCH',
+    body: JSON.stringify({ fantasy_squad: fantasySquad }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to save fantasy squad');
+  }
+
+  return data;
+};
+
+export type RetrieveFantasySquadResponse = {
+  fantasy_squad: FantasySquadPayload | null;
+  fantasy_score: number | null;
+};
+
+export const retrieveFantasySquadPayload = async (): Promise<RetrieveFantasySquadResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad`, {
+    method: 'GET',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to load fantasy squad');
+  }
+
+  return data;
+};
+
+export const scoreFantasySquadPayload = async (): Promise<FantasyScoreResponse> => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/fantasy/squad/score`, {
+    method: 'GET',
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.detail || 'Failed to score fantasy squad');
   }
 
   return data;

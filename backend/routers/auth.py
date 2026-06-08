@@ -1,7 +1,7 @@
 # routers/auth.py
 from fastapi import APIRouter, HTTPException
 from services import auth as auth_service
-from schemas.auth_format import SignupRequest, LoginRequest, RefreshRequest, PasswordResetRequest, UpdatePasswordRequest
+from schemas.auth_format import SignupRequest, LoginRequest, RefreshRequest, PasswordResetRequest, UpdatePasswordRequest, UpdateUsernameRequest
 
 router = APIRouter(
     prefix="/auth",
@@ -28,16 +28,16 @@ async def login(req: LoginRequest):
         response = auth_service.authenticate_user(req.email, req.password)
         
         # Return the JWTs to the client
+        username = auth_service.get_username(response.user.id)
         return {
             "message": "Login successful",
             "access_token": response.session.access_token,
             "refresh_token": response.session.refresh_token,
-            "user": response.user.user_metadata.get("username"),    
+            "user": username,
             "user_id": response.user.id
         }
         
     except Exception as e:
-        # Updated error message to reflect email
         raise HTTPException(status_code=401, detail="Invalid email or password.")
     
 @router.post("/refresh")
@@ -76,5 +76,23 @@ async def update_password(
         auth_service.update_user_password(token, req.password)
         
         return {"message": "Password updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.patch("/update-username")
+async def update_username(
+    req: UpdateUsernameRequest,
+    authorization: str = Header(...)
+):
+    username = req.username.strip()
+    if len(username) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters.")
+    if len(username) > 30:
+        raise HTTPException(status_code=400, detail="Username must be 30 characters or fewer.")
+
+    try:
+        token = auth_service.get_access_token(authorization)
+        auth_service.update_username(token, username)
+        return {"message": "Username updated successfully", "username": username}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

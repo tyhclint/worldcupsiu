@@ -38,6 +38,10 @@ def authenticate_user(email: str, password: str):
     })
     return response
 
+def get_username(user_id: str):
+    response = supabase_admin.table("users").select("username").eq("user_id", user_id).single().execute()
+    return response.data["username"]
+
 def get_access_token(authorization: str) -> str:
     scheme, _, token = authorization.partition(" ")
     if scheme.lower() != "bearer" or not token:
@@ -81,4 +85,14 @@ def update_user_password(access_token: str, new_password: str):
     })
     supabase.auth.sign_out()
     
+    return response
+
+def update_username(access_token: str, username: str):
+    user_response = supabase.auth.get_user(access_token)
+    user_id = user_response.user.id
+
+    response = supabase_admin.table("users").update({
+        "username": username,
+    }).eq("user_id", user_id).execute()
+
     return response
