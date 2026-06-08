@@ -87,45 +87,53 @@ export default function RoomModal({ room, onClose }: RoomModalProps) {
     .sort(([slotA], [slotB]) => slotA.localeCompare(slotB))
     .map(([, player]) => player);
 
-  const renderFantasySlot = (player: FantasySelectedPlayer) => (
-    <div
-      key={`${player.id}-${player.country_code}`}
-      className="relative flex h-28 w-16 flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm sm:w-24"
-    >
-      <span className="absolute left-1.5 top-0.5 z-10">
-        <FantasyCountryFlag
-          countryCode={player.country_code}
-          label={player.name}
-          className="text-sm shadow-sm"
-          fallbackClassName="text-[9px] font-bold"
-        />
-      </span>
-      <img
-        src={player.photo}
-        alt={player.name}
-        className="h-14 w-14 rounded-full object-cover"
+
+
+const renderFantasySlot = (player: FantasySelectedPlayer) => (
+  <div
+    key={`${player.id}-${player.country_code}`}
+    className="relative flex h-24 w-[3.20rem] flex-col items-center justify-center overflow-hidden rounded-lg border border-white/30 bg-white/15 text-white shadow-sm"
+  >
+    <span className="absolute left-1 top-0.5 z-10">
+      <FantasyCountryFlag
+        countryCode={player.country_code}
+        label={player.name}
+        className="text-sm shadow-sm"
+        fallbackClassName="text-[9px] font-bold"
       />
-      <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
-      <span className="text-[10px] uppercase text-white/70">
-        {fantasyPositionLabel[player.position]}
-      </span>
-    </div>
-  );
+    </span>
+    <img
+      src={player.photo}
+      alt={player.name}
+      className="h-10 w-10 rounded-full object-cover"
+    />
+    <span className="mt-1 max-w-full truncate px-1 text-[10px] font-bold">{player.name}</span>
+    <span className="text-[8px] uppercase text-white/70">
+      {fantasyPositionLabel[player.position]}
+    </span>
+  </div>
+);
 
-  const renderFantasyPitch = (fantasySquad: FantasySquadPayload) => {
-    const starters = fantasySquad.starters ?? {};
-    const bench = fantasySquad.bench ?? {};
-    const rows = [
-      getFantasyPlayersBySlotPrefix(starters, 'starter-gkp'),
-      getFantasyPlayersBySlotPrefix(starters, 'starter-def'),
-      getFantasyPlayersBySlotPrefix(starters, 'starter-mid'),
-      getFantasyPlayersBySlotPrefix(starters, 'starter-fwd'),
-    ];
+const renderFantasyPitch = (fantasySquad: FantasySquadPayload) => {
+  const starters = fantasySquad.starters ?? {};
+  const bench = fantasySquad.bench ?? {};
 
+  // Group by actual player position, not slot prefix
+  const rows: Record<string, FantasySelectedPlayer[]> = {
+    Goalkeeper: [], Defender: [], Midfielder: [], Attacker: []
+  };
+
+  Object.entries(starters)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([, player]) => {
+      rows[player.position]?.push(player);
+    });
+
+  const pitchRows = [rows.Goalkeeper, rows.Defender, rows.Midfielder, rows.Attacker];
     return (
       <div className="rounded-xl bg-green-700 p-2 shadow-sm sm:p-4">
         <div className="space-y-6 rounded-lg border-2 border-white/70 bg-green-600 px-2 py-8 sm:px-4">
-          {rows.map((row, rowIndex) => (
+          {pitchRows.map((row, rowIndex) => (
             <div key={rowIndex} className="mx-auto flex w-max justify-center gap-1 rounded-3xl bg-white/10 px-2 py-3 sm:gap-4 sm:px-4 md:gap-6">
               {row.map((player) => renderFantasySlot(player))}
             </div>

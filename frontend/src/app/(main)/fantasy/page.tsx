@@ -106,6 +106,7 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
   });
 
   const isWildcard = slot.id === 'bench-wc-1';
+  const isBench = slot.id.startsWith('bench-');
 
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -123,7 +124,7 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
       >
         <button
           onClick={onClick}
-          className={`relative flex h-28 w-[4.25rem] sm:w-24 flex-col items-center justify-center overflow-hidden rounded-lg border text-white shadow-sm transition hover:scale-105 ${
+          className={`relative flex h-24 w-[3.75rem] sm:h-28 sm:w-24 flex-col items-center justify-center overflow-hidden rounded-lg border text-white shadow-sm transition hover:scale-105 ${
             player
               ? 'border-white/50 bg-white/20 cursor-grab active:cursor-grabbing'
               : isWildcard
@@ -141,9 +142,9 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
                   fallbackClassName="text-[9px] font-bold"
                 />
               </span>
-              <img src={player.photo} alt={player.name} className="h-14 w-14 rounded-full object-cover" />
-              <span className="mt-1 max-w-full truncate px-1 text-xs font-bold">{player.name}</span>
-              <span className="text-[10px] uppercase text-white/70">{player.position}</span>
+              <img src={player.photo} alt={player.name} className="h-11 w-11 sm:h-14 sm:w-14 rounded-full object-cover" />
+              <span className={`mt-1 max-w-full truncate px-1 font-bold ${isBench ? 'text-[10px]' : 'text-xs'}`}>{player.name}</span>
+              <span className={`uppercase text-white/70 ${isBench ? 'text-[8px]' : 'text-[10px]'}`}>{player.position}</span>
             </>
           ) : (
             <>
@@ -470,23 +471,29 @@ export default function FantasyPage() {
             </div>
           </div>
 
-          <div className="mt-6 flex flex-wrap justify-end gap-4">
+          <div className="mt-6 flex flex-wrap justify-end gap-3 sm:gap-4">
             <button
               onClick={() => {
                 setDraftedPlayers({});
                 setSubmitStatus('idle');
               }}
-              className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
+              className="flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-bold text-gray-600 transition hover:bg-gray-50"
             >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
               Reset
             </button>
-            <button
-              disabled={!hasSavedFantasySquad || submitStatus === 'submitting'}
+            {/* <button
+              disabled= {true}
+              // disabled={!hasSavedFantasySquad || submitStatus === 'submitting'}
+              title="scoring starts when the World Cup begins"
               onClick={scoreSquad}
               className="rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-white"
             >
               Score squad
-            </button>
+            </button> */}
             <button
               disabled={!canSubmitSquad || submitStatus === 'submitting'}
               onClick={submitSquad}

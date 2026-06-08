@@ -19,7 +19,7 @@ export default function FantasyTutorialModal({ onClose }: { onClose: () => void 
           </div>
           <div className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 font-bold text-gray-900">2</span>
-            <p><strong>Draft your 15 players:</strong> Tap on the empty slots on the pitch to fill your starting 11 and your 4 bench players.</p>
+            <p><strong>Draft your 16 players:</strong> Tap on the empty slots on the pitch to fill your starting 11 and your 5 bench players.</p>
           </div>
           <div className="flex gap-3">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gray-100 font-bold text-gray-900">3</span>
