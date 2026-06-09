@@ -17,6 +17,8 @@ import {
   DndContext,
   closestCenter,
   PointerSensor,
+  MouseSensor, 
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent
@@ -118,15 +120,15 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
   const style = {
     transform: CSS.Translate.toString(transform),
     opacity: isDragging ? 0.5 : 1,
+    touchAction: 'none', // <-- CRITICAL FIX FOR MOBILE
   };
 
   return (
-    // Droppable is the outer container
     <div ref={setDroppableRef} className={`rounded-xl transition-all ${isOver ? 'scale-110 ring-4 ring-yellow-400' : ''}`}>
-      {/* Draggable handle is separate from the click target */}
       <div
         ref={setDraggableRef}
         style={style}
+        // Tailwind alternative: className={player ? "touch-none" : ""}
         {...(player ? { ...attributes, ...listeners } : {})}
       >
         <button
@@ -141,6 +143,7 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
         >
           {player ? (
             <>
+              {/* ... existing player UI ... */}
               <span className="absolute left-1.5 top-0.5 z-10">
                 <FantasyCountryFlag
                   countryCode={player.country_code}
@@ -155,6 +158,7 @@ const DraftSlotCard = memo(function DraftSlotCard({ slot, player, onClick } :
             </>
           ) : (
             <>
+               {/* ... existing empty slot UI ... */}
               <span className="mb-1 text-2xl">{isWildcard ? '🌟' : '+'}</span>
               <span className="text-[10px] sm:text-xs font-bold text-center leading-tight px-1">{slot.label}</span>
               <span className="mt-1 text-[8px] uppercase text-white/50">Pick Player</span>
@@ -201,8 +205,16 @@ export default function FantasyPage() {
   }, [draftedPlayers]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 8, 
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150, 
+        tolerance: 5, 
+      },
     })
   );
 
