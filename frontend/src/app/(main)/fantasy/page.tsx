@@ -229,6 +229,17 @@ export default function FantasyPage() {
       const newDraft = { ...prev };
       const sourcePlayer = newDraft[sourceId];
       const targetPlayer = newDraft[targetId];
+      const sourceSlot = SLOTS.find((slot) => slot.id === sourceId);
+      const targetSlot = SLOTS.find((slot) => slot.id === targetId);
+      const canDropOnSlot = (player: FantasySelectedPlayer, slot?: typeof SLOTS[number]) =>
+        Boolean(slot && (slot.id === 'bench-wc-1' || slot.allowedPositions.includes(player.position)));
+
+      if (!sourcePlayer || !sourceSlot || !targetSlot) return prev;
+
+      if (!canDropOnSlot(sourcePlayer, targetSlot) || (targetPlayer && !canDropOnSlot(targetPlayer, sourceSlot))) {
+        toast.error("Players can only be moved to matching positions.");
+        return prev;
+      }
 
       if (targetPlayer) newDraft[sourceId] = targetPlayer;
       else delete newDraft[sourceId];
