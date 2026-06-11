@@ -225,6 +225,10 @@ export default function FantasyPage() {
     const sourceId = active.id.toString();
     const targetId = over.id.toString();
 
+    if (sourceId.startsWith('bench-') && targetId.startsWith('bench-')) {
+      return; 
+    }
+
     setDraftedPlayers((prev) => {
       const newDraft = { ...prev };
       const sourcePlayer = newDraft[sourceId];
