@@ -2,6 +2,7 @@ import pytest
 
 from schemas.knockout_format import GroupPlacements
 from services.scoring import score_group_stage_predictions
+from services.results import normalize_group_standings
 
 
 def test_score_group_stage_predictions_uses_absolute_distance():
@@ -58,3 +59,38 @@ def test_score_group_stage_predictions_rejects_team_outside_group():
 
     with pytest.raises(ValueError, match="brazil is not in Group_A"):
         score_group_stage_predictions(group_stage, actual_results)
+
+
+def test_normalize_group_standings_uses_api_team_ids():
+    api_payload = {
+        "response": [
+            {
+                "league": {
+                    "standings": [
+                        [
+                            {
+                                "rank": 1,
+                                "group": "Group B",
+                                "team": {
+                                    "id": 1113,
+                                    "name": "Bosnia & Herzegovina",
+                                },
+                            },
+                            {
+                                "rank": 2,
+                                "group": "Group B",
+                                "team": {
+                                    "id": 777,
+                                    "name": "Türkiye",
+                                },
+                            },
+                        ]
+                    ],
+                },
+            }
+        ],
+    }
+
+    result = normalize_group_standings(api_payload)
+
+    assert result["Group_B"] == ["bosnia", "turkiye"]

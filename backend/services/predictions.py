@@ -1,6 +1,6 @@
 import requests
 
-from core.config import SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL
+from core.config import SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, supabase_admin
 
 
 def upsert_prediction(bracket_data, access_token: str):
@@ -67,3 +67,28 @@ def update_prediction(user_id: str, bracket_data, access_token: str):
 
     data = response.json()
     return data[0] if data else None
+
+
+def list_all_predictions():
+    response = (
+        supabase_admin.table("user_predictions")
+        .select("user_id,bracket_data,global_score")
+        .execute()
+    )
+    return response.data or []
+
+
+def update_prediction_score_admin(user_id: str, score: int, details=None):
+    payload = {
+        "global_score": score,
+    }
+    if details is not None:
+        payload["score_breakdown"] = details
+
+    response = (
+        supabase_admin.table("user_predictions")
+        .update(payload)
+        .eq("user_id", user_id)
+        .execute()
+    )
+    return response.data[0] if response.data else None

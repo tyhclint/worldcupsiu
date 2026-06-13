@@ -4,7 +4,7 @@ import os
 import httpx
 import requests
 
-from core.config import SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL
+from core.config import SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL, supabase_admin
 from schemas.fantasy_format import ApiSportsSquad, ApiSportsSquadsResponse
 from services.results import API_FOOTBALL_BASE_URL
 
@@ -87,7 +87,7 @@ async def fetch_player_rating(
     player_id: int,
     player_name: str,
     league: int = 1,
-    season: int = 2022,
+    season: int = 2026,
 ):
     async with semaphore:
         response = await client.get(
@@ -117,8 +117,8 @@ async def fetch_player_rating(
 
 async def score_fantasy_squad(fantasy_squad):
     selected_players = list(fantasy_squad["starters"].values()) + list(fantasy_squad["bench"].values())
-    if len(selected_players) != 15:
-        raise ValueError("Fantasy squad must include 15 players before scoring")
+    if len(selected_players) != 16:
+        raise ValueError("Fantasy squad must include 16 players before scoring")
 
     semaphore = asyncio.Semaphore(10)
 
@@ -205,3 +205,28 @@ def retrieve_fantasy_squad(user_id: str, access_token: str):
 
     data = response.json()
     return data[0] if data else None
+
+
+def list_all_fantasy_squads():
+    response = (
+        supabase_admin.table("user_fantasy_squads")
+        .select("user_id,fantasy_squad,fantasy_score")
+        .execute()
+    )
+    return response.data or []
+
+
+def update_fantasy_score_admin(user_id: str, fantasy_score: float | None, details=None):
+    payload = {
+        "fantasy_score": fantasy_score,
+    }
+    if details is not None:
+        payload["fantasy_score_breakdown"] = details
+
+    response = (
+        supabase_admin.table("user_fantasy_squads")
+        .update(payload)
+        .eq("user_id", user_id)
+        .execute()
+    )
+    return response.data[0] if response.data else None
