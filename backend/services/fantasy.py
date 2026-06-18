@@ -100,13 +100,19 @@ async def fetch_player_rating(
     data = response.json()
     players = data.get("response", [])
     if not players:
-        raise ValueError(f"Missing rating data for {player_name}")
+        #raise ValueError(f"Missing rating data for {player_name}")
+        return {
+            "id": player_id,
+            "name": player_name,
+            "rating": 0.0,
+        }
 
     item = players[0]
     player = item.get("player", {})
     rating = item.get("statistics", [{}])[0].get("games", {}).get("rating")
     if rating is None:
-        raise ValueError(f"Missing rating for {player_name}")
+        #raise ValueError(f"Missing rating for {player_name}")
+        rating = 0.0
 
     return {
         "id": player.get("id", player_id),
@@ -120,7 +126,7 @@ async def score_fantasy_squad(fantasy_squad):
     if len(selected_players) != 16:
         raise ValueError("Fantasy squad must include 16 players before scoring")
 
-    semaphore = asyncio.Semaphore(10)
+    semaphore = asyncio.Semaphore(2)
 
     async with httpx.AsyncClient(timeout=10) as client:
         rating_results = await asyncio.gather(*[
