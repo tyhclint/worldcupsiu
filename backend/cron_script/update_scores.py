@@ -18,8 +18,12 @@ from services.predictions import (
     list_all_predictions,
     update_prediction_score_admin,
 )
-from services.results import fetch_worldcup_standings, normalize_group_standings
-from services.scoring import score_group_stage_predictions
+from services.results import (
+    fetch_worldcup_standings,
+    normalize_group_standings,
+    normalize_knockout_standings,
+)
+from services.scoring import score_bracket_predictions
 
 
 def limit_records(records, limit: int | None):
@@ -30,7 +34,8 @@ def limit_records(records, limit: int | None):
 
 def update_prediction_scores(dry_run: bool, limit: int | None):
     raw_standings = fetch_worldcup_standings()
-    actual_results = normalize_group_standings(raw_standings)
+    actual_group_results = normalize_group_standings(raw_standings)
+    actual_knockout_results = normalize_knockout_standings(raw_standings)
     records = limit_records(list_all_predictions(), limit)
 
     stats = {"updated": 0, "failed": 0, "skipped": 0}
@@ -46,9 +51,10 @@ def update_prediction_scores(dry_run: bool, limit: int | None):
 
         try:
             bracket = BracketDataSchema.model_validate(bracket_data)
-            score_result = score_group_stage_predictions(
-                bracket.group_stage,
-                actual_results,
+            score_result = score_bracket_predictions(
+                bracket,
+                actual_group_results,
+                actual_knockout_results,
             )
             score = score_result["score"]
 
