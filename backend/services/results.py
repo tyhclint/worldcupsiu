@@ -100,3 +100,49 @@ def normalize_group_standings(api_payload: dict[str, Any]) -> dict[str, list[str
         ]
 
     return normalized_results
+
+
+KNOCKOUT_STAGE_ORDER = (
+    "round_of_32",
+    "round_of_16",
+    "quarter_finals",
+    "semi_finals",
+    "final",
+    "champion",
+)
+
+KNOCKOUT_DESCRIPTION_TO_STAGE = {
+    "round of 32": "round_of_32",
+    "round of 16": "round_of_16",
+    "quarter-finals": "quarter_finals",
+    "quarter finals": "quarter_finals",
+    "quarterfinals": "quarter_finals",
+    "semi-finals": "semi_finals",
+    "semi finals": "semi_finals",
+    "semifinals": "semi_finals",
+    "final": "final",
+    "winner": "champion",
+    "champion": "champion",
+}
+
+
+def normalize_knockout_standings(api_payload: dict[str, Any]) -> dict[str, set[str]]:
+    standings = api_payload["response"][0]["league"]["standings"]
+    normalized_results = {stage: set() for stage in KNOCKOUT_STAGE_ORDER}
+
+    for group_standings in standings:
+        for row in group_standings:
+            description = row.get("description")
+            if not description:
+                continue
+
+            reached_stage = KNOCKOUT_DESCRIPTION_TO_STAGE.get(description.strip().lower())
+            if not reached_stage:
+                continue
+
+            team_id = normalize_team(row["team"])
+            reached_index = KNOCKOUT_STAGE_ORDER.index(reached_stage)
+            for stage in KNOCKOUT_STAGE_ORDER[: reached_index + 1]:
+                normalized_results[stage].add(team_id)
+
+    return normalized_results
